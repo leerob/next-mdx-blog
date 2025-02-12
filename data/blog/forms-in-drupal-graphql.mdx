@@ -18,13 +18,11 @@ One of the most important part in our platform is custom fields. And the ability
 
 So if we are looking at 100 repositories, many of them with custom fields, custom logic etc we need a way to do this in a maintainable / sane way. We can’t just build forms after forms in all these repos, in no time we would be looking at dozens and dozens of these.. and maintaining this with a small team would be close to impossible.
 
-We had the form API before going into decoupled, that had its own set of issues but for this particular problem it had served us pretty well. We wanted something like that, or better.
+We had the form API before going into decoupled, that had its own set of issues (it's not like managing forms was "easy") but for this particular problem it had served us pretty well. We wanted something like that, or better.
 
 ## The API
 
 When working with decoupled one of the things I love the most (there are a lot of things I love about it) is the ability to think about the API (especially when doing things like this where your target group are fellow developers) and then walking backwards from the type of API you want (by API I mean more how the DX looks like for other developers to use) to understand what you have to build to make that work.
-
-This is something that I always thought the React team did a great job with, they are thoughtful about the APIs they build and I think a lot of React’s success stems exactly from this ability to design good reusable APIs.
 
 I remember looking at [React JSON schema form](https://github.com/rjsf-team/react-jsonschema-form) and thinking “this is really cool, and quite close to what we need”. But even then it looked too complex, because I know the Drupal entity (the name and bundle) and from there I should be able to get the information about all the fields, which ones are required, what are the default values, placeholders etc etc. So providing again everything about it seems unnecessarily complicated.
 
@@ -51,11 +49,11 @@ along the way, all of this pretty smoothly with some team members using this API
 are able to change the internals because the API our developers interact with does not change.
 When you entangle implementation details with API (the way developers interact with your components and code) you loose refactoring ability.
 
-Maybe its just me, but this gives me a lot of satisfaction. But more on how this actually works:
+But more on how this actually works:
 
 ## Drupal Entity definition query
 
-When we started working on this, we (shout out to Rado who worked on this closely with me about 4 years ago oh such fun memories) created (initially in a custom module then ported to the official graphql module) the [EntityDefinition](https://git.drupalcode.org/project/graphql/-/commit/bbe602a36c68a07f1ee3cb91090a3ec8f202b888) query. It's main purpose was to retrieve all necessary information from any Entity, this includes everything from fields, to each field’s form settings and anything that’s necessary to build a form.
+When we started working on this, we (credits to [Rado](https://www.drupal.org/u/hideaway) who worked on this closely with me to design this approach) created (initially in a custom module then ported to the official graphql module) the [EntityDefinition](https://git.drupalcode.org/project/graphql/-/commit/bbe602a36c68a07f1ee3cb91090a3ec8f202b888) query. It's main purpose was to retrieve all necessary information from any Entity, this includes everything from fields, to each field’s form settings and anything that’s necessary to build a form.
 
 This is what this query looks like :
 
@@ -89,7 +87,7 @@ We now had to actually create the `EntityForm` component that displays all the f
 
 The entity form component unfortunately was never open sourced (the idea was thrown around a couple of times) but our implementation of it has its own quirks and custom things inside (they always do) but its implementation is way simpler than what it seems.
 
-It is a lot of code, but not a a lot of complicated code. In its core it’s a component with a big switch statement checking the field type (integer, dates, boolean, term, address, etc etc..and also cardinality etc) and then returning a component such as an input, a select etc (or multiple).
+It is a lot of code, but not a a lot of complicated code. In its core it’s a component with a big switch statement checking the field type (`integer`, `dates`, `boolean`, `term`, `address`, etc etc..and also cardinality etc) and then returning a component such as an input, a select etc (or multiple).
 
 (The code bellow is pseudo code)
 
@@ -153,7 +151,7 @@ Users are used to a certain type of UI and keeping things within that range make
 
 In some situations fields only make sense based on previous data / selection. This is usually done in Drupal’s Form API using the [#states property](https://www.drupal.org/docs/drupal-apis/form-api/conditional-form-fields) of form elements.
 
-We have a similar system baked into this EntityForm component where we configure fieldRules in a similar way and we can pass those when needed to the EntityForm.
+We have a similar system baked into this EntityForm component where we configure `fieldRules` in a similar way and we can pass those when needed to the EntityForm.
 
 We use them for hiding, disabling, making fields required or even hiding parts of the taxonomy tree when certain rules (values of other fields) are met
 
@@ -182,13 +180,17 @@ We use Entity forms for the whole Resume editing which is a page with multiple s
 
 ### Mutations
 
-So we can make forms but what about submissions? Mutations are a bit more complicated but it can also be somewhat automated, and even though we never really fully automated this part we got it to a pretty good point.
+So we can make forms but what about submissions?
+
+Submissions are handled in GraphQL with [Mutations](https://graphql.org/learn/mutations/) and mutations can also be somewhat automated, and even though we never really fully automated this part we got it to a pretty good point.
 
 We use GraphQL and this whole article is based on that (even thought I would think this would be possible with JSON API as well)
 
-But one of the important aspects with GraphQL that’s relevant is that we don’t use the field names from Drupal (on purpose). That’s both a blessing and a curse here. Because of this we need some mapping of the field names in the GraphQL API and the drupal machine names.
+But one of the important aspects with GraphQL that’s relevant for this case is that we don’t use the field names from Drupal (**on purpose that's kind of the point**).
 
-What we do is in the same place where we configure field rules, what fields we want to use (which can be different per site) we also provide the mapping for the fields (the api name and drupal name). Our configuration can look a bit like this :
+That’s both a blessing and a curse here though. Because of this we need some mapping of the field names in the GraphQL API and the drupal machine names.
+
+What we do for this is that we have a config file which defines what fields we want (e.g. on some entities there are fields we don't want to show in the frontend for example). This config file is a javascript file that is used by the component that's rendering the form, and that config file defines not only what fields we want to use (which can be different per site), the field rules (if any), but also provide the mapping for the fields (the api name and drupal name).
 
 Here is what e.g. a section of the resume shown above can look like in terms of configuration :
 
@@ -227,15 +229,18 @@ in the right format (what the API expects).
       }
     });
   }}
+  ...
 />
 ```
 
+(there are a lot more options we can pass to the component, I am trying to put here only the important parts)
+
 This makes mutations simple enough, and still leaves room for some "custom" things to be done within the callback (AKA it's not "too" automatic).
 
-#### A note on the structure of fields in GraphQL, Inputs and Types
+#### ⚠️ A note on the structure of fields in GraphQL, Inputs and Types
 
 In order for this to work we do need to make sure we stick to some level of consistency on fields across all the different types and entities we use. A taxonomy field should use the
-Term type (GraphQL type) and a TermInput (Input type). This was never an issue because we never intended to do it differently, but its a good thing to keep in mind.
+`Term` type (GraphQL type) and a `TermInput` (Input type). This was never an issue because we never intended to do it differently, but its a good thing to keep in mind.
 
 If we have a term field with `tid` and `label` (a taxonomy reference) we need to make sure that all terms follow this pattern (which is a good idea anyway) so we make a `Term` type in GraphQL and use that (same for the Input)..
 and so whenever we have a term we know the structure of it.
@@ -244,9 +249,9 @@ We also use [GraphQL codegen](https://the-guild.dev/graphql/codegen) which means
 
 ## Closing remarks
 
-I hope this made sense, and that it's at least not too hard to follow. There are of course even more nuances and complexities that I have somewhat hidden away here in order to make this a bit more
+I hope this made some sense, and that it was at least not too hard to follow. There are of course even more nuances and complexities that I have somewhat hidden away here in order to make this a bit more
 comprehensible. There's a lot when it comes to forms, and it's a bit overwhelming at times but this particular "project" was one of the most interesting and challenging ones (of the many) in the last few years. It has served
-our company very very well and the flexibility we are able to provide to clients is very on par with a "normal" drupal site (which is far more than most platforms do as we know).
+our company very very well (in my somewhat biased opinion) and the flexibility we are able to provide to clients is very on par with a "normal" drupal site (which is far more than most platforms do as we know).
 
 ### Why did we never open source this component?
 
@@ -278,7 +283,7 @@ Lets explore some ideas of how this could look like. For JSON API the field mapp
 />
 ```
 
-The main idea here would be to give the possibility to customize the widget for each field type. We would still have the actual form library inside (or just use React 19 form api)
+The main idea here would be to give the possibility to customize the widget for each field type. We would still have the actual form library inside (or just use [React 19 form api](https://react.dev/reference/react-dom/components/form))
 
 ### Hook API
 
@@ -301,3 +306,5 @@ return (
 
 Here we already give the user more control over both the styling and the actual form generation. We would need a good definition of what a "field" is and what
 are the options available for it. But as a consequence it does "less". It can still probably do the querying, handle the data massaging and so on.
+
+I hope this was a fun read, and thank you for sticking to it until the end ;)
