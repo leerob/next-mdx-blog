@@ -6,46 +6,46 @@ image: '/static/images/posts/forms.jpg'
 tags: [product, development]
 ---
 
-Most websites use forms. In this article I will try to demonstrate how we have been using forms in decoupled using the [drupal graphql](https://www.drupal.org/project/graphql) module and [Next.Js](https://nextjs.org/) (but the concept would apply to any other framework as well) and describe the component and integration between React and Drupal that we have made to generate forms automatically based on any Entity from Drupal.
+Most websites use forms. Most websites need forms. In this article I will show how we have been using forms in decoupled using the [drupal graphql](https://www.drupal.org/project/graphql) module and [Next.Js](https://nextjs.org/). The concept would apply to any other framework as well.
 
 ## The idea / motivation
 
-We have a lot of repositories and most of them share a lot of the code. This means that we re-use a lot of code for a lot of different purposes (for good and / or bad). When going into decoupled (way back in 2018 when there was barely anything around) we knew forms was going to be a challenge and something we needed to solve.
+We have a lot of repositories and most of them share a lot of the code. This means that we re-use a lot of code for a lot of different purposes (for good and / or bad). As we started decoupling (way back in 2018) we knew forms was going to be a challenge and something we needed to solve.
 
-At this point you might be asking as to why that is.
+At this point you might be asking why that is.
 
 One of the most important part in our platform is custom fields. And the ability to have custom fields (and rules inside fields) per project in not just one but multiple entities.
 
 So if we are looking at 100 repositories, many of them with custom fields, custom logic etc we need a way to do this in a maintainable / sane way. We can’t just build forms after forms in all these repos, in no time we would be looking at dozens and dozens of these.. and maintaining this with a small team would be close to impossible.
 
-We had the form API before going into decoupled, that had its own set of issues (it's not like managing forms was "easy") but for this particular problem it had served us pretty well. We wanted something like that, or better.
+We had the form API before, that had its own set of issues but for this particular problem it had served us pretty well. We wanted something like that, or better.
 
 ## The API
 
-When working with decoupled one of the things I love the most (there are a lot of things I love about it) is the ability to think about the API (especially when doing things like this where your target group are fellow developers) and then walking backwards from the type of API you want (by API I mean more how the DX looks like for other developers to use) to understand what you have to build to make that work.
+When working with decoupled one of the things I like the most is the ability to think about the API first (especially when doing things like this where your target group are other developers). Once you nailed the API then start walking backwards from it to understand what you have to build to make that work.
 
-I remember looking at [React JSON schema form](https://github.com/rjsf-team/react-jsonschema-form) and thinking “this is really cool, and quite close to what we need”. But even then it looked too complex, because I know the Drupal entity (the name and bundle) and from there I should be able to get the information about all the fields, which ones are required, what are the default values, placeholders etc etc. So providing again everything about it seems unnecessarily complicated.
+I remember looking at [React JSON schema form](https://github.com/rjsf-team/react-jsonschema-form) and thinking “this is really cool, and quite close to what we need”. But even then it looked too complex. We know the Drupal entity and from there we should be able to get the information about all the fields, which ones are required, their default values, placeholders and so on. So we should be able to have a query that gets us this.
 
 So what could this look like for a developer to use in its simplest form?
 
-Something that not only respects but takes inspiration from the elegancy of good React (and components) and this is what I thought was a good API for a component like this :
+Something that not only respects but takes inspiration from the elegancy of React and this is what I thought was a good API for a component like this :
 
 ```typescript
 <EntityForm name="node" bundle="article" />
 ```
 
-This is a really simple component to use, and if It generates a full blown form (we will talk about the submission part later), it seems pretty nice. Dump this on any page or component, and you automatically get a form that respects the fields, and settings of that Entity.
+This is a simple component to use, and if it generates a full blown form (we will talk about the submission part later), it would be pretty nice. Put this on any page or component, and you get a form that respects the fields, and settings of that Entity.
 
-One of the nice things about this is that we can develop custom modules that alter fields, add new fields, etc etc and all of this automatically gets reflected without any need to further changes in the frontend (what this means is we can essentially reconfigure forms from the database or configuration via Drupal).
+One of the nice things about this is that we can develop custom modules that alter fields, add new fields, and it all gets reflected without any need to further changes in the frontend. What this means is we can reconfigure forms from the database or configuration via Drupal.
 
-Not only that but more importantly because we have admins that need the same forms, we avoid the duplication of adding all of this both in the backend and the frontend.
+Not only that but as we have admins that need the same forms, we avoid the duplication of adding all this both in the backend and the frontend.
 
 Going back to our probably now over 100 hundred repositories, this saved thousands and thousand of lines of code for us and a lot of nightmares.
 
-We don’t duplicate forms, ever. Even when we need custom fields and sometimes even in registration forms we use custom fields (some sites have e.g. a email / password only form but some have 4/5/6 custom fields..and they use the same “form” its just altered by a custom module)
+We don’t duplicate forms, ever. Even when we need custom fields (some sites have e.g. a email / password only on registration but some have 4/5/6 custom fields) we do this via a custom module.
 
-This also has allowed us to evolve forms over time, we started using [Formik](https://formik.org/) eventually moved to [React Hook Form](https://react-hook-form.com/) and also switched some validation libraries
-along the way, all of this pretty smoothly with some team members using this API without even knowing that this transition had happened. This was only possible because we designed our own API and
+This also has allowed us to evolve forms over time. We started using [Formik](https://formik.org/) eventually moved to [React Hook Form](https://react-hook-form.com/) and also switched some validation libraries
+along the way. All of this pretty smoothly with some team members using this API without even knowing that this transition had happened. This was only possible because we designed our own API and
 are able to change the internals because the API our developers interact with does not change.
 When you entangle implementation details with API (the way developers interact with your components and code) you loose refactoring ability.
 
@@ -85,9 +85,9 @@ We now had to actually create the `EntityForm` component that displays all the f
 
 ## The entity form component
 
-The entity form component unfortunately was never open sourced (the idea was thrown around a couple of times) but our implementation of it has its own quirks and custom things inside (they always do) but its implementation is way simpler than what it seems.
+The entity form component unfortunately was never open sourced (the idea was thrown around a couple of times) but our implementation of it has its own quirks and custom things inside but its implementation is way simpler than what it seems.
 
-It is a lot of code, but not a a lot of complicated code. In its core it’s a component with a big switch statement checking the field type (`integer`, `dates`, `boolean`, `term`, `address`, etc etc..and also cardinality etc) and then returning a component such as an input, a select etc (or multiple).
+It is a lot of code, but not a a lot of complicated code. In its core it’s a component with a big switch statement checking the field type (`integer`, `dates`, `boolean`, `term`, `address`, as well as cardinality and other things) and then returning a component such as an input, a select etc (or multiple).
 
 (The code bellow is pseudo code)
 
@@ -125,7 +125,7 @@ So essentially this component has a few jobs :
 1. Run a query to get information about the entity
 2. Check the fields returned by the entity
 3. for each field render the appropriate widget (component)
-4. Do some data massaging for preparing data for submission (this is only necessary because in GraphQL fields can use their own names so you need some mapping between api fields and actual field machine names, more on this later)
+4. Do some data massaging for preparing data for submission
 
 #### Supported widgets
 
@@ -190,7 +190,7 @@ But one of the important aspects with GraphQL that’s relevant for this case is
 
 That’s both a blessing and a curse here though. Because of this we need some mapping of the field names in the GraphQL API and the drupal machine names.
 
-What we do for this is that we have a config file which defines what fields we want (e.g. on some entities there are fields we don't want to show in the frontend for example). This config file is a javascript file that is used by the component that's rendering the form, and that config file defines not only what fields we want to use (which can be different per site), the field rules (if any), but also provide the mapping for the fields (the api name and drupal name).
+What we do for this is we have a config file which defines what fields we want (e.g. on some entities there are fields we don't want to show in the frontend for example). This config file is a javascript file that is used by the component that's rendering the form, and that config file defines not only what fields we want to use (which can be different per site), the field rules (if any), but also provide the mapping for the fields (the api name and drupal name).
 
 Here is what e.g. a section of the resume shown above can look like in terms of configuration :
 
@@ -214,7 +214,7 @@ job_preferences: {
 
 The important part here is the `fields` object which is a mapping of api field name to drupal machine name and also the fieldRules as I described above.
 
-What this accomplishes is that we can automatically on the `EntityForm` component generate a form based on the configuration we have provided and also provide the submission data
+What this accomplishes is that we can generate a form based on the configuration we have provided and also provide the submission data
 in the right format (what the API expects).
 
 ```typescript
@@ -250,8 +250,11 @@ We also use [GraphQL codegen](https://the-guild.dev/graphql/codegen) which means
 ## Closing remarks
 
 I hope this made some sense, and that it was at least not too hard to follow. There are of course even more nuances and complexities that I have somewhat hidden away here in order to make this a bit more
-comprehensible. There's a lot when it comes to forms, and it's a bit overwhelming at times but this particular "project" was one of the most interesting and challenging ones (of the many) in the last few years. It has served
-our company very very well (in my somewhat biased opinion) and the flexibility we are able to provide to clients is very on par with a "normal" drupal site (which is far more than most platforms do as we know).
+comprehensible.
+
+There's a lot when it comes to forms, and it's a bit overwhelming at times but this particular "project" was one of the most interesting and challenging ones (of the many) in the last few years. It has served
+our company very very well (in my somewhat biased opinion) and the flexibility we are able to provide to clients is very on par with what we have always had (which is far more than most platforms do as we know) but with the ability of improving
+our UI and UX greatly (also on forms).
 
 ### Why did we never open source this component?
 
@@ -260,9 +263,9 @@ to make decoupling Drupal easier.
 
 Some of the challenges are :
 
-- HTML: Our component is simple to call, but it embeds all the HTML (React widgets for each field type using our own Design system) and in a open source package you don't want to force people into styling approaches or enforce too much the structure of the HTML.
-- GraphQL : We only use GraphQL and so there are some things within the component that assume that (including querying for the Entity information)
-- Form libraries : Event worst than forcing users into a specific style library would be to force them in a specific form library. Some of these are big, and some of them are just not very well maintained (that's e.g. why we moved away from Formik)
+- **HTML**: Our component is simple to call, but it embeds all the HTML (React widgets for each field type using our own Design system) and in a open source package you don't want to force people into styling approaches or enforce too much the structure of the HTML.
+- **GraphQL** : We only use GraphQL and so there are some things within the component that assume that (including querying for the Entity information)
+- **Form libraries** : Event worst than forcing users into a specific style library would be to force them in a specific form library. Some of these are big, and some of them are just not very well maintained (that's e.g. why we moved away from Formik)
 
 Given all of this, I still think there is room for handling some of the heavy lifting and giving users a hook or something that would make it easy for people to create their own forms for any entity they need.
 
@@ -305,7 +308,11 @@ return (
 ```
 
 Here we already give the user more control over both the styling and the actual form generation. We would need a good definition of what a "field" is and what
-are the options available for it. But as a consequence it does "less". It can still probably do the querying, handle the data massaging and so on.
+are the options available for it. But as a consequence it does "less".
 
-I hope this was a fun read, and thank you for sticking to it until the end ;) I would like to thank everyone that contributed to our form solution over the years, everyone in the product team at [jobiqo](http://jobiqo.com/) and for everyone that helped review
+It can still probably do the querying, handle the data massaging and so on.
+
+I hope this was a fun read, and thank you for sticking to it until the end ;)
+
+I would like to thank everyone that contributed to our form solution over the years, everyone in the product team at [jobiqo](http://jobiqo.com/) and for everyone that helped review
 this article.
