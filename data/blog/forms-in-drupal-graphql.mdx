@@ -14,17 +14,17 @@ We have a lot of repositories and most of them share a lot of the code. This mea
 
 At this point you might be asking why that is.
 
-One of the most important parts in our platform is custom fields. And the ability to have custom fields (and rules inside fields) per project in not just one but across multiple entities.
+One of the most important parts in our platform is custom fields. And the ability to have custom fields (and rules inside fields) in each of our projects in not just one but across multiple entities.
 
 So if we are looking at 100 repositories, many of them with custom fields, custom logic etc we need a way to do this in a maintainable / sane way. We can’t just build forms after forms in all these repos, in no time we would be looking at dozens and dozens of these.. and maintaining this with a small team would be close to impossible.
 
-Let's look at an example of a custom field, let's say we have a Job content type and we have some fields for it like a title a description and some relevant information for the job like desired skills, location, etc.
+But first let's look at an example of a custom field, let's say we have a `Job` content type and we have some fields for it like a title a description and some relevant information for the job like desired skills, location, etc.
 
 Now let's assume that we are talking about a job for an airplane pilot,
-there might be specific requirements (even legal requirements) for this type of job. Things like the license type, how many flight hours the applicant has, Aircraft type that he can operate and so on. This is where we need
+there might be specific requirements (even legal requirements) for this type of job. Things like the license type, how many flight hours the applicant has, Aircraft type and so on. This is where we need
 to add some custom fields to this job entity.
 
-Here is what this would look like :
+This is what it looks like in action :
 
 <Image
   alt={`Custom fields on job`}
@@ -48,6 +48,8 @@ Something that not only respects but takes inspiration from the elegancy of Reac
 ```typescript
 <EntityForm name="node" bundle="article" />
 ```
+
+I am using the default `article` example here, following the example above the bundle would be `job`. But this approach works for other entities like `profile`, `group` or `contact`.
 
 This is a simple component to use, and if it generates a full blown form (we will talk about the submission part later), it would be pretty nice. Put this on any page or component, and you get a form that respects the fields, and settings of that Entity.
 
