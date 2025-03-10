@@ -18,6 +18,21 @@ One of the most important parts in our platform is custom fields. And the abilit
 
 So if we are looking at 100 repositories, many of them with custom fields, custom logic etc we need a way to do this in a maintainable / sane way. We can’t just build forms after forms in all these repos, in no time we would be looking at dozens and dozens of these.. and maintaining this with a small team would be close to impossible.
 
+Let's look at an example of a custom field, let's say we have a Job content type and we have some fields for it like a title a description and some relevant information for the job like desired skills, location, etc.
+
+Now let's assume that we are talking about a job for an airplane pilot,
+there might be specific requirements (even legal requirements) for this type of job. Things like the license type, how many flight hours the applicant has, Aircraft type that he can operate and so on. This is where we need
+to add some custom fields to this job entity.
+
+Here is what this would look like :
+
+<Image
+  alt={`Custom fields on job`}
+  src={`/static/images/posts/fields.avif`}
+  width={800}
+  height={408}
+/>
+
 We had the form API before, that had its own set of issues but for this particular problem it had served us pretty well. We wanted something like that, or better.
 
 ## The API
@@ -267,7 +282,7 @@ Some of the challenges are :
 
 - **HTML**: Our component is simple to call, but it embeds all the HTML (React widgets for each field type using our own Design system) and in a open source package you don't want to force people into styling approaches or enforce too much the structure of the HTML.
 - **GraphQL** : We only use GraphQL and so there are some things within the component that assume that (including querying for the Entity information)
-- **Form libraries** : Event worst than forcing users into a specific style library would be to force them in a specific form library. Some of these are big, and some of them are just not very well maintained (that's e.g. why we moved away from Formik)
+- **Form libraries** : Event worse than forcing users into a specific style library would be to force them in a specific form library. Some of these are big, and some of them are just not very well maintained (that's e.g. why we moved away from Formik)
 
 Given all of this, I still think there is room for handling some of the heavy lifting and giving users a hook or something that would make it easy for people to create their own forms for any entity they need.
 
