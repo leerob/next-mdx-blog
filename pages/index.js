@@ -47,6 +47,11 @@ export default function Home({ videos }) {
           Latest articles
         </h3>
         <BlogPost
+          title="How Frameworks Reflect the Culture of Product teams"
+          summary="Framework choices are more than technical, they reveal the culture and priorities of the teams behind them."
+          slug="frameworks-reflect-culture"
+        />
+        <BlogPost
           title="The cost of flexibility in Drupal"
           summary="Balancing flexibility and focus: Navigating Drupal’s potential without sacrificing UX and maintainability"
           slug="the-cost-of-flexibility-in-drupal"
@@ -55,11 +60,6 @@ export default function Home({ videos }) {
           title="Using AI to assist in visual testing"
           summary="Experiments with visual testing in the world of AI"
           slug="using-AI-to-assist-in-visual-testing"
-        />
-        <BlogPost
-          title="On decisions that last"
-          summary="The best things, the best products and experiences last for a long time."
-          slug="long-choices"
         />
         <h3 className="font-bold text-2xl md:text-4xl tracking-tight mb-4 mt-8 text-black dark:text-white">
           Latest projects
