@@ -47,7 +47,7 @@ export default function Home({ videos }) {
           Latest articles
         </h3>
         <BlogPost
-          title="How Frameworks Reflect the Culture of Product teams"
+          title="How frameworks reflect the culture of product teams"
           summary="Framework choices are more than technical, they reveal the culture and priorities of the teams behind them."
           slug="frameworks-reflect-culture"
         />
