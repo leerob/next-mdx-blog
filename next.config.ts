@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next';
 import createMDX from '@next/mdx';
 import postgres from 'postgres';
-import remarkGfm from 'remark-gfm';
 
 export const sql = postgres(process.env.POSTGRES_URL!, {
   ssl: 'allow'
