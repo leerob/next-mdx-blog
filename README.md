@@ -32,4 +32,5 @@ CREATE TABLE redirects (
   destination VARCHAR(255) NOT NULL,
   permanent BOOLEAN NOT NULL
 );
+goodgood
 ```
