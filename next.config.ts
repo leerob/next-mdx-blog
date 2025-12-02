@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
   experimental: {
     mdxRs: { mdxType: 'gfm' }
   }
- };
+};
 
 const withMDX = createMDX({});
 
