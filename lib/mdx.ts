@@ -15,6 +15,7 @@ export async function mdxToHtml(source) {
       rehypePlugins: [
         rehypeSlug,
         rehypeCodeTitles,
+        [rehypePrism, { ignoreMissing: true }],
         rehypeKatex,
         [
           rehypeAutolinkHeadings,

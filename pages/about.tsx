@@ -22,7 +22,7 @@ export default function About() {
             frameworks to tackle fundamental challenges in how AI systems learn,
             reason, and interact. Whether investigating new RL paradigms,
             alignment techniques, or quantitative modelling, I approach problems
-            with both technical rigour and an artist's sensibility—believing
+            with both technical rigour and an artist's sensibility, believing
             that elegant solutions require creative insight.
           </p>
           <h2>Biography</h2>
