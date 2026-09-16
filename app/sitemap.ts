@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import Link from 'next/link'
+import Link from 'next/link';
+import Link from 'next/link';
 
 const SITE_URL = 'https://next-mdx-blog.vercel.app';
 
