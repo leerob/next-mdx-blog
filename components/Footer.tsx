@@ -38,7 +38,7 @@ export default function Footer() {
             LinkedIn
           </ExternalLink>
           <ExternalLink href="https://github.com/ziyi-zhu">GitHub</ExternalLink>
-          <ExternalLink href="https://www.youtube.com/channel/UC0snS_FYHj_5y_uFmWzp2hg">
+          <ExternalLink href="https://www.youtube.com/@neoziyism">
             YouTube
           </ExternalLink>
         </div>
