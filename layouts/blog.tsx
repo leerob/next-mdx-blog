@@ -46,9 +46,7 @@ export default function BlogLayout({
           </p>
         </div>
         <Suspense fallback={null}>
-          <div className="w-full mt-4 prose dark:prose-dark max-w-none">
-            {children}
-          </div>
+          <div className="w-full mt-4 prose max-w-none">{children}</div>
           <div className="mt-8 text-sm text-gray-700 dark:text-gray-300">
             <a
               href={`https://mobile.twitter.com/search?q=${encodeURIComponent(

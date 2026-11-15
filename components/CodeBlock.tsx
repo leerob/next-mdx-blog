@@ -80,7 +80,7 @@ function CopyButton({ getText }: { getText: () => string }) {
       type="button"
       aria-label="Copy code"
       onClick={() => copyRef.current()}
-      className="absolute right-2 top-2 flex items-center gap-1.5 h-8 pl-2 pr-2.5 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur text-gray-700 dark:text-gray-200 text-xs font-medium not-prose"
+      className="absolute right-3 top-3 flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full overflow-hidden surface text-ink-2 text-xs font-medium not-prose"
     >
       <span className="relative w-4 h-4 flex-none">
         <svg

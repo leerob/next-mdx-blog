@@ -24,7 +24,7 @@ export default function Uses() {
           height={1546 / 2}
           priority
         />
-        <div className="prose dark:prose-dark w-full">
+        <div className="prose w-full">
           <h3 id="computer-office">Computer / Office</h3>
           <ul>
             <li>16&quot; Macbook Pro (2020)</li>

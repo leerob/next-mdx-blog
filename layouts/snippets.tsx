@@ -34,7 +34,7 @@ export default function SnippetLayout({
             />
           </div>
         </div>
-        <div className="prose dark:prose-dark w-full">{children}</div>
+        <div className="prose w-full">{children}</div>
       </article>
     </Container>
   );

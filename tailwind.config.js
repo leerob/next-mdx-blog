@@ -37,76 +37,75 @@ module.exports = {
       fontFamily: {
         sans: ['Inter', ...fontFamily.sans]
       },
-      typography: (theme) => ({
+      // Markdown pages: the typography plugin's own colour variables, pointed
+      // at the site's tokens so light and dark follow the theme by
+      // themselves, plus a few Notion-like touches.
+      typography: {
         DEFAULT: {
           css: {
-            color: theme('colors.gray.700'),
+            '--tw-prose-body': 'var(--text-2)',
+            '--tw-prose-headings': 'var(--text)',
+            '--tw-prose-lead': 'var(--text-2)',
+            '--tw-prose-links': 'var(--text)',
+            '--tw-prose-bold': 'var(--text)',
+            '--tw-prose-counters': 'var(--muted)',
+            '--tw-prose-bullets': 'var(--muted-2)',
+            '--tw-prose-hr': 'var(--fill-3)',
+            '--tw-prose-quotes': 'var(--text)',
+            '--tw-prose-quote-borders': 'var(--text)',
+            '--tw-prose-captions': 'var(--muted)',
+            '--tw-prose-code': 'var(--red)',
+            '--tw-prose-pre-code': 'var(--text)',
+            '--tw-prose-pre-bg': 'var(--fill-1)',
+            '--tw-prose-th-borders': 'var(--fill-3)',
+            '--tw-prose-td-borders': 'var(--fill-3)',
+            // links: the text's own colour over a soft underline
             a: {
-              color: theme('colors.blue.500'),
-              '&:hover': {
-                color: theme('colors.blue.700')
-              },
-              code: { color: theme('colors.blue.400') }
+              fontWeight: '500',
+              textDecorationColor:
+                'color-mix(in srgb, currentColor 35%, transparent)',
+              textDecorationThickness: '1px',
+              textUnderlineOffset: '3px',
+              transition: 'text-decoration-color .15s'
             },
-            'h2,h3,h4': {
-              'scroll-margin-top': spacing[32]
+            'a:hover': { textDecorationColor: 'currentColor' },
+            // inline code: a quiet pill, no backticks
+            'code::before': { content: 'none' },
+            'code::after': { content: 'none' },
+            code: {
+              fontWeight: '400',
+              fontSize: '0.85em',
+              padding: '0.2em 0.4em',
+              borderRadius: '6px',
+              backgroundColor: 'var(--fill-2)'
             },
-            thead: {
-              borderBottomColor: theme('colors.gray.200')
+            pre: { borderRadius: '16px' },
+            'pre code': {
+              padding: '0',
+              borderRadius: '0',
+              backgroundColor: 'transparent',
+              fontSize: 'inherit'
             },
-            code: { color: theme('colors.pink.500') },
-            'blockquote p:first-of-type::before': false,
-            'blockquote p:last-of-type::after': false
-          }
-        },
-        dark: {
-          css: {
-            color: theme('colors.gray.200'),
-            a: {
-              color: theme('colors.blue.400'),
-              '&:hover': {
-                color: theme('colors.blue.600')
-              },
-              code: { color: theme('colors.blue.400') }
-            },
+            // quotes: a plain bar, no italics
             blockquote: {
-              borderLeftColor: theme('colors.gray.700'),
-              color: theme('colors.gray.300')
+              fontStyle: 'normal',
+              fontWeight: '400',
+              borderLeftWidth: '3px'
             },
-            'h2,h3,h4': {
-              color: theme('colors.gray.100'),
-              'scroll-margin-top': spacing[32]
+            'blockquote p:first-of-type::before': { content: 'none' },
+            'blockquote p:last-of-type::after': { content: 'none' },
+            // tables: a light full grid
+            table: { borderCollapse: 'collapse' },
+            'thead th': { backgroundColor: 'var(--fill-1)' },
+            'th, td': {
+              border: '1px solid var(--fill-3)',
+              padding: '0.5em 0.75em !important'
             },
-            hr: { borderColor: theme('colors.gray.700') },
-            ol: {
-              li: {
-                '&:before': { color: theme('colors.gray.500') }
-              }
-            },
-            ul: {
-              li: {
-                '&:before': { backgroundColor: theme('colors.gray.500') }
-              }
-            },
-            strong: { color: theme('colors.gray.100') },
-            thead: {
-              th: {
-                color: theme('colors.gray.100')
-              },
-              borderBottomColor: theme('colors.gray.600')
-            },
-            tbody: {
-              tr: {
-                borderBottomColor: theme('colors.gray.700')
-              }
-            }
+            'h2,h3,h4': { scrollMarginTop: spacing[32] }
           }
         }
-      })
+      }
     }
-  },
-  variants: {
-    typography: ['dark']
   },
   plugins: [require('@tailwindcss/typography')]
 };

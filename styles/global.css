@@ -157,19 +157,6 @@ html {
   @apply visible;
 }
 
-.prose pre {
-  @apply border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900;
-}
-
-.prose code {
-  @apply text-gray-800 dark:text-gray-200 px-1 py-0.5 border border-gray-100 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900;
-}
-
-.prose pre code {
-  @apply text-gray-800 dark:text-gray-200 p-0;
-  border: initial;
-}
-
 .prose img {
   /* Don't apply styles to next/image */
   @apply m-0;
@@ -238,7 +225,7 @@ html {
 
 code[class*='language-'],
 pre[class*='language-'] {
-  @apply text-gray-800 dark:text-gray-50;
+  @apply text-ink;
 }
 
 pre::-webkit-scrollbar {
@@ -251,7 +238,7 @@ pre {
 }
 
 .rehype-code-title {
-  @apply px-5 py-3 font-mono text-sm font-bold text-gray-800 bg-gray-200 border border-b-0 border-gray-200 rounded-t-lg dark:text-gray-200 dark:border-gray-700 dark:bg-gray-800;
+  @apply px-5 py-3 font-mono text-sm font-semibold text-ink-2 bg-fill-2 rounded-t-2xl;
 }
 
 .rehype-code-title + pre,
