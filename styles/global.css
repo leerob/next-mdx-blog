@@ -171,7 +171,8 @@ pre {
   @apply px-5 py-3 font-mono text-sm font-bold text-gray-800 bg-gray-200 border border-b-0 border-gray-200 rounded-t-lg dark:text-gray-200 dark:border-gray-700 dark:bg-gray-800;
 }
 
-.rehype-code-title + pre {
+.rehype-code-title + pre,
+.rehype-code-title + .code-block > pre {
   @apply mt-0 rounded-t-none;
 }
 
@@ -229,4 +230,110 @@ table {
 
 .katex-display > .katex {
   white-space: nowrap;
+}
+
+/* Loading > Success spinner: a conic sweep masked into a ring */
+.submit-spin {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 10%,
+    currentColor 85%,
+    transparent 85%
+  );
+  -webkit-mask: radial-gradient(circle closest-side, transparent 66%, #000 70%);
+  mask: radial-gradient(circle closest-side, transparent 66%, #000 70%);
+}
+
+/* Ghost Suggestion letters */
+.ghost-letter {
+  @apply inline-block whitespace-pre text-gray-400 dark:text-gray-500 transition-colors duration-200 will-change-transform;
+}
+
+.ghost-letter.ok {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+/* Roll Links: letters on little drums */
+.roll-text {
+  @apply inline-flex;
+}
+
+.roll-ch {
+  @apply inline-block overflow-hidden whitespace-pre align-top;
+  height: 1.5em;
+}
+
+.roll-in {
+  @apply flex flex-col will-change-transform;
+}
+
+.roll-in i {
+  font-style: normal;
+  height: 1.5em;
+  line-height: 1.5em;
+}
+
+/* hovering one link in a group steps the others back */
+.roll-group:has(.roll-link:hover) .roll-link {
+  @apply text-gray-300 dark:text-gray-700;
+}
+
+.roll-group:has(.roll-link:hover) .roll-link:hover,
+.roll-group .roll-link:focus-visible {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+/* Letter Limit ring */
+.letter-limit {
+  @apply opacity-0 transition-opacity duration-200;
+}
+
+.letter-limit.is-on {
+  @apply opacity-100;
+}
+
+.letter-limit circle {
+  fill: none;
+  stroke-width: 2.6;
+}
+
+.letter-track {
+  @apply stroke-gray-200 dark:stroke-gray-700;
+}
+
+.letter-fill {
+  @apply stroke-gray-500 dark:stroke-gray-300 transition-colors duration-200;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+}
+
+.letter-count {
+  @apply invisible text-gray-500 transition-colors duration-200;
+}
+
+.letter-limit.is-near .letter-fill {
+  @apply stroke-orange-500;
+}
+
+.letter-limit.is-full .letter-fill {
+  @apply stroke-red-500;
+}
+
+.letter-limit.is-near .letter-count,
+.letter-limit.is-full .letter-count {
+  @apply visible;
+}
+
+.letter-limit.is-near .letter-count {
+  @apply text-orange-500;
+}
+
+.letter-limit.is-full .letter-count {
+  @apply text-red-500;
+}
+
+.letter-pile span {
+  @apply absolute left-0 top-0 font-medium text-red-500 will-change-transform;
+  margin: -12px 0 0 -5px;
 }

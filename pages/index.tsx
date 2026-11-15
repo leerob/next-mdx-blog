@@ -7,6 +7,7 @@ import BlogPostCard from '../components/BlogPostCard';
 import ResearchPaperCard from '../components/ResearchPaperCard';
 import Subscribe from '../components/Subscribe';
 import VideoCard from '../components/VideoCard';
+import RollText from '../components/RollText';
 
 export default function Home() {
   return (
@@ -65,7 +66,7 @@ export default function Home() {
             href="https://www.semanticscholar.org/author/Ziyi-Zhu/2214424924"
             className="flex items-center mt-8 text-gray-600 dark:text-gray-400 leading-7 rounded-lg hover:text-gray-800 dark:hover:text-gray-200 transition-all h-6"
           >
-            View all publications
+            <RollText text="View all publications" />
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -104,7 +105,7 @@ export default function Home() {
             className="flex items-center mt-8 text-gray-600 dark:text-gray-400 leading-7 rounded-lg hover:text-gray-800 dark:hover:text-gray-200 transition-all h-6"
           >
             <>
-              {'Read all posts'}
+              <RollText text="Read all posts" />
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -165,7 +166,7 @@ export default function Home() {
             href="https://www.youtube.com/@neoziyism"
             className="flex items-center mt-8 text-gray-600 dark:text-gray-400 leading-7 rounded-lg hover:text-gray-800 dark:hover:text-gray-200 transition-all h-6"
           >
-            Watch all videos
+            <RollText text="Watch all videos" />
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

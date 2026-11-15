@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import prisma from 'lib/prisma';
+import { GUESTBOOK_MAX_LENGTH } from 'lib/types';
 
 export default async function handler(
   req: NextApiRequest,
@@ -36,7 +37,7 @@ export default async function handler(
     const newEntry = await prisma.guestbook.create({
       data: {
         email,
-        body: (req.body.body || '').slice(0, 500),
+        body: (req.body.body || '').slice(0, GUESTBOOK_MAX_LENGTH),
         created_by: name
       }
     });

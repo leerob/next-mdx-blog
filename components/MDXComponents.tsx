@@ -8,6 +8,7 @@ import Analytics from 'components/metrics/Analytics';
 import YouTube from 'components/metrics/Youtube';
 import Step from 'components/Step';
 import ImageWithTheme from 'components/ImageWithTheme';
+import CodeBlock from 'components/CodeBlock';
 
 const CustomLink = (props) => {
   const href = props.href;
@@ -41,6 +42,7 @@ const MDXComponents = {
   Image: RoundedImage,
   ImageWithTheme,
   a: CustomLink,
+  pre: CodeBlock,
   Callout,
   Analytics,
   ConsCard,

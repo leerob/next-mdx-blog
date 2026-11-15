@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import prisma from 'lib/prisma';
+import { GUESTBOOK_MAX_LENGTH } from 'lib/types';
 
 export default async function handler(
   req: NextApiRequest,
@@ -47,7 +48,7 @@ export default async function handler(
   }
 
   if (req.method === 'PUT') {
-    const body = (req.body.body || '').slice(0, 500);
+    const body = (req.body.body || '').slice(0, GUESTBOOK_MAX_LENGTH);
 
     await prisma.guestbook.update({
       where: {

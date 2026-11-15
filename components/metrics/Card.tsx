@@ -1,3 +1,40 @@
+import { useEffect, useRef } from 'react';
+
+import { S, step, atRest, register, kick } from 'lib/spring';
+
+// Number roll from Stat Card (designbookmark.com/motion#db-stat-card): when
+// the metric arrives it springs up from zero to its value instead of popping
+// in, and rolls between values if it changes.
+function RollingNumber({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const spring = useRef(S(0, 160, 22));
+
+  useEffect(() => {
+    const el = ref.current!,
+      val = spring.current;
+    return register({
+      frame(dt) {
+        step(val, dt);
+      },
+      render() {
+        el.textContent = Math.max(0, Math.round(val.x)).toLocaleString();
+      },
+      idle: () => atRest(val, 0.5)
+    });
+  }, []);
+
+  useEffect(() => {
+    spring.current.t = value;
+    kick();
+  }, [value]);
+
+  return (
+    <span ref={ref} className="tabular-nums">
+      0
+    </span>
+  );
+}
+
 export default function MetricCard({ header, link, metric, isCurrency }) {
   return (
     <div className="metric-card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 w-full">
@@ -27,7 +64,7 @@ export default function MetricCard({ header, link, metric, isCurrency }) {
       </a>
       <p className="mt-2 text-3xl font-bold spacing-sm text-black dark:text-white">
         {metric > 0 && isCurrency && '$'}
-        {metric > 0 ? metric.toLocaleString() : '-'}
+        {metric > 0 ? <RollingNumber value={metric} /> : '-'}
       </p>
     </div>
   );

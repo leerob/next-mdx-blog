@@ -86,3 +86,6 @@ export type GuestbookEntry = {
   created_at: string;
   updated_at: string;
 };
+
+// Max characters in a guestbook message (same convention as a tweet).
+export const GUESTBOOK_MAX_LENGTH = 280;
