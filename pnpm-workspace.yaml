@@ -1,3 +1,7 @@
+# pnpm 9 (used by Vercel) requires a packages field; this repo is a single package.
+packages:
+  - '.'
+
 allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
