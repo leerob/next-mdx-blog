@@ -5,8 +5,9 @@ import cn from 'classnames';
 import fetcher from 'lib/fetcher';
 import { S, step, clamp, atRest, register, kick } from 'lib/spring';
 
-const TILT = 10; // deg
-const DEPTH = 14; // px a layer of depth 1 slides at full tilt
+// The example's own defaults (--ticket-tilt, --ticket-depth, --ticket-flip)
+const TILT = 14; // deg
+const DEPTH = 18; // px a layer of depth 1 slides at full tilt
 
 type Paper = {
   title: string;
@@ -22,12 +23,18 @@ type Paper = {
 
 const face =
   'absolute inset-0 rounded-[28px] overflow-hidden [backface-visibility:hidden] [-webkit-backface-visibility:hidden]';
+// .layer in the original
+const layer = 'absolute will-change-transform pointer-events-none';
 
 // Parallax Ticket (designbookmark.com/motion#db-parallax-ticket): the card
 // tilts toward the cursor and each layer moves by its own depth, so the
 // gradient and the title separate in space, while a glare follows the
 // cursor. Click flips it on a spring that overshoots a little, showing the
-// paper's details and links on the back.
+// paper's details and links on the back. Untouched, it floats gently so the
+// depth is visible without a cursor (only while it is on screen).
+//
+// Like the original, nothing on the faces uses backdrop-filter: in WebKit it
+// breaks backface-visibility, and the front shows through, mirrored.
 export default function ResearchPaperCard(paper: Paper) {
   const {
     title,
@@ -68,7 +75,16 @@ export default function ResearchPaperCard(paper: Paper) {
       LIFT = S(1, 300, 18);
     const F = S(0, 170, 15); // flip angle, overshoots a little
     let gx = 50,
-      gy = 30;
+      gy = 30,
+      hover = false,
+      onScreen = false,
+      clock = 0;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const seen = new IntersectionObserver(([e]) => {
+      onScreen = e.isIntersecting;
+      kick();
+    });
+    seen.observe(stage);
 
     flipRef.current = (to) => {
       if (F.t === (to ? 180 : 0)) return;
@@ -77,22 +93,16 @@ export default function ResearchPaperCard(paper: Paper) {
       kick();
     };
     const move = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return;
       const r = stage.getBoundingClientRect();
       const nx = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
       const ny = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
       gx = (nx + 1) * 50;
       gy = (ny + 1) * 50;
-      RX.t = -ny * TILT;
-      RY.t = nx * TILT;
-      G.t = 1;
+      hover = true;
       kick();
     };
     const leave = () => {
-      RX.t = 0;
-      RY.t = 0;
-      G.t = 0;
-      LIFT.t = 1;
+      hover = false;
       kick();
     };
     const down = () => {
@@ -106,10 +116,24 @@ export default function ResearchPaperCard(paper: Paper) {
     stage.addEventListener('pointermove', move);
     stage.addEventListener('pointerleave', leave);
     stage.addEventListener('pointerdown', down);
-    stage.addEventListener('pointerup', up);
+    window.addEventListener('pointerup', up);
 
     const unregister = register({
       frame(dt) {
+        clock += dt;
+        if (hover) {
+          RX.t = -(gy / 50 - 1) * TILT;
+          RY.t = (gx / 50 - 1) * TILT;
+          G.t = 1;
+        } else if (onScreen && !still) {
+          RX.t = Math.sin(clock * 0.9) * 4;
+          RY.t = Math.cos(clock * 0.7) * 7;
+          G.t = 0.25;
+        } else {
+          RX.t = 0;
+          RY.t = 0;
+          G.t = 0;
+        }
         [RX, RY, G, LIFT, F].forEach((s) => step(s, dt));
       },
       render() {
@@ -124,14 +148,19 @@ export default function ResearchPaperCard(paper: Paper) {
         glare.style.setProperty('--gx', gx + '%');
         glare.style.setProperty('--gy', gy + '%');
       },
-      idle: () => [RX, RY, G, LIFT, F].every((s) => atRest(s))
+      // floating keeps it moving while on screen; otherwise sleep at rest
+      idle: () =>
+        !hover &&
+        !(onScreen && !still) &&
+        [RX, RY, G, LIFT, F].every((s) => atRest(s))
     });
 
     return () => {
       stage.removeEventListener('pointermove', move);
       stage.removeEventListener('pointerleave', leave);
       stage.removeEventListener('pointerdown', down);
-      stage.removeEventListener('pointerup', up);
+      window.removeEventListener('pointerup', up);
+      seen.disconnect();
       unregister();
     };
   }, []);
@@ -166,23 +195,24 @@ export default function ResearchPaperCard(paper: Paper) {
             flip();
           }
         }}
-        className="relative h-[272px] rounded-[28px] cursor-pointer [transform-style:preserve-3d] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--fill-3)]"
+        className="relative h-[272px] rounded-[28px] cursor-pointer pointer-events-none [transform-style:preserve-3d] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--fill-3)]"
       >
         {/* front */}
         <div
           className={face}
           aria-hidden={flipped}
-          // a face turned away still takes clicks in 3D hit-testing: only the
-          // visible face may receive them
+          // The card is only a 3D wrapper and takes no clicks itself: in 3D
+          // hit-testing it shares a plane with the faces. Only the face that
+          // is showing receives clicks, which bubble up to the card.
           style={{ pointerEvents: flipped ? 'none' : 'auto' }}
         >
           <div
             data-depth="0.25"
-            className={cn('absolute -inset-5 bg-gradient-to-br', gradient)}
+            className={cn(layer, '-inset-5 bg-gradient-to-br', gradient)}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/45" />
-          <div data-depth="0.9" className="absolute inset-0">
-            <span className="absolute left-5 top-5 text-xs font-medium px-2.5 py-1 rounded-full bg-black/25 text-white backdrop-blur-sm">
+          <div data-depth="0.9" className={cn(layer, 'inset-0')}>
+            <span className="absolute left-5 top-5 text-xs font-medium px-2.5 py-1 rounded-full bg-black/25 text-white">
               {venue}
             </span>
             <h4 className="absolute left-5 right-5 bottom-[52px] text-xl font-bold leading-snug tracking-tight text-white">
@@ -199,7 +229,7 @@ export default function ResearchPaperCard(paper: Paper) {
             className="absolute inset-0 pointer-events-none opacity-0 mix-blend-screen"
             style={{
               background:
-                'radial-gradient(240px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,.28), transparent 60%)'
+                'radial-gradient(240px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,.22), transparent 60%)'
             }}
           />
         </div>
@@ -208,7 +238,7 @@ export default function ResearchPaperCard(paper: Paper) {
         <div
           className={cn(
             face,
-            'surface flex flex-col p-5 [transform:rotateY(180deg)_translateZ(1px)]'
+            'surface flex flex-col p-5 [transform:rotateY(180deg)]'
           )}
           aria-hidden={!flipped}
           style={{ pointerEvents: flipped ? 'auto' : 'none' }}
