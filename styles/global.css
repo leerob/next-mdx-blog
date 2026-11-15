@@ -44,6 +44,24 @@
   box-shadow: 0 0 0 1px var(--rim) inset;
 }
 
+/* Parallax ticket: one side of the card, copied from the original's .side.
+   Its drop shadow is drawn at the original's strength (--sh: 0), so it is
+   invisible, but keep it: without it, iOS WebKit stops hiding the side's
+   moving layers when they face away, and the front shows through the back,
+   mirrored. */
+.ticket-side {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: var(--surface);
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow:
+    0 0 0 1px var(--rim) inset,
+    0 40px 70px -30px rgba(0, 0, 0, 0);
+}
+
 ::selection {
   background-color: #47a3f3;
   color: #fefefe;

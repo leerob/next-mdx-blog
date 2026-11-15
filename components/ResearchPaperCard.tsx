@@ -21,9 +21,7 @@ type Paper = {
   gradient: string;
 };
 
-const face =
-  'absolute inset-0 rounded-[28px] overflow-hidden [backface-visibility:hidden] [-webkit-backface-visibility:hidden]';
-// .layer in the original
+// .layer in the original (the sides are .ticket-side in global.css)
 const layer = 'absolute will-change-transform pointer-events-none';
 
 // Parallax Ticket (designbookmark.com/motion#db-parallax-ticket): the card
@@ -32,9 +30,6 @@ const layer = 'absolute will-change-transform pointer-events-none';
 // cursor. Click flips it on a spring that overshoots a little, showing the
 // paper's details and links on the back. Untouched, it floats gently so the
 // depth is visible without a cursor (only while it is on screen).
-//
-// Like the original, nothing on the faces uses backdrop-filter: in WebKit it
-// breaks backface-visibility, and the front shows through, mirrored.
 export default function ResearchPaperCard(paper: Paper) {
   const {
     title,
@@ -199,7 +194,7 @@ export default function ResearchPaperCard(paper: Paper) {
       >
         {/* front */}
         <div
-          className={face}
+          className="ticket-side"
           aria-hidden={flipped}
           // The card is only a 3D wrapper and takes no clicks itself: in 3D
           // hit-testing it shares a plane with the faces. Only the face that
@@ -236,10 +231,7 @@ export default function ResearchPaperCard(paper: Paper) {
 
         {/* back */}
         <div
-          className={cn(
-            face,
-            'surface flex flex-col p-5 [transform:rotateY(180deg)]'
-          )}
+          className="ticket-side flex flex-col p-5 [transform:rotateY(180deg)]"
           aria-hidden={!flipped}
           style={{ pointerEvents: flipped ? 'auto' : 'none' }}
         >
