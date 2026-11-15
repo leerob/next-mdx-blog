@@ -35,37 +35,39 @@ function RollingNumber({ value }: { value: number }) {
   );
 }
 
+// Laid out like Stat Card (designbookmark.com/motion#db-stat-card): a
+// borderless surface, a muted label and one big tabular number.
 export default function MetricCard({ header, link, metric, isCurrency }) {
   return (
-    <div className="metric-card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 w-full">
-      <a
-        aria-label={header}
-        target="_blank"
-        rel="noopener noreferrer"
-        href={link}
-      >
-        <div className="flex items-center text-gray-900 dark:text-gray-100">
-          {header}
-          <svg
-            className="h-4 w-4 ml-1"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-            />
-          </svg>
-        </div>
-      </a>
-      <p className="mt-2 text-3xl font-bold spacing-sm text-black dark:text-white">
+    <a
+      aria-label={header}
+      target="_blank"
+      rel="noopener noreferrer"
+      href={link}
+      className="metric-card not-prose surface group block w-full rounded-3xl p-5 transition-transform active:scale-[0.98]"
+    >
+      <div className="flex items-center justify-between text-sm leading-[18px] text-muted">
+        {header}
+        <svg
+          className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 17L17 7M8 7h9v9"
+          />
+        </svg>
+      </div>
+      <p className="mt-1.5 text-[34px] leading-10 font-semibold tracking-[-0.02em] text-ink">
         {metric > 0 && isCurrency && '$'}
-        {metric > 0 ? <RollingNumber value={metric} /> : '-'}
+        {metric > 0 ? <RollingNumber value={metric} /> : '–'}
       </p>
-    </div>
+    </a>
   );
 }

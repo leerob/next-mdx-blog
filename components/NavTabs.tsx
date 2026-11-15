@@ -110,13 +110,13 @@ export default function NavTabs() {
 
   return (
     <div
-      className="relative hidden md:inline-flex"
+      className="relative hidden md:flex items-center"
       onPointerLeave={() => pickRef.current(active)}
     >
       <span
         ref={pillRef}
         aria-hidden="true"
-        className="absolute left-0 top-0 rounded-lg bg-gray-200 dark:bg-gray-800 opacity-0 will-change-transform pointer-events-none"
+        className="absolute left-0 top-0 rounded-full bg-fill-2 opacity-0 will-change-transform pointer-events-none"
       />
       {ITEMS.map((item, i) => (
         <NextLink
@@ -133,10 +133,10 @@ export default function NavTabs() {
             i === active
               ? 'font-semibold text-gray-800 dark:text-gray-200'
               : 'font-normal text-gray-600 dark:text-gray-400',
-            'relative p-1 sm:px-3 sm:py-2 rounded-lg transition-colors'
+            'relative flex items-center h-10 px-3.5 rounded-full transition-colors'
           )}
         >
-          <span className="capsize">{item.text}</span>
+          {item.text}
         </NextLink>
       ))}
     </div>

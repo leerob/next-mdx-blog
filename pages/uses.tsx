@@ -11,13 +11,13 @@ export default function Uses() {
         <h1 className="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white">
           My Gear
         </h1>
-        <p className="text-gray-700 dark:text-gray-300 mt-2 mb-8">
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
           Here's what tech I'm currently using for coding, videos, and music.
           Most of these have been accumulated over the past few years, with a
           recent office upgrade in 2020.
         </p>
         <Image
-          className="rounded-lg"
+          className="rounded-3xl"
           alt={`My computer desk`}
           src={`/static/images/setup.png`}
           width={2164 / 2}

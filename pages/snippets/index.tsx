@@ -22,7 +22,7 @@ export default function Snippets({
           past and saved. Some are algorithms that I find interesting, some are
           mathematical theorems, and some are just books that I've read.
         </p>
-        <div className="grid w-full grid-cols-1 gap-4 my-2 mt-4 sm:grid-cols-2">
+        <div className="grid w-full grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
           {snippets.map((snippet) => (
             <FunctionCard
               key={snippet.slug}

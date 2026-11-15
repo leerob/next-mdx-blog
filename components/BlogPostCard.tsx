@@ -11,18 +11,18 @@ export default function BlogPostCard({ title, slug }) {
   return (
     <Link
       href={`/blog/${slug}`}
-      className="block w-full md:w-1/3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 transform hover:scale-[1.01] transition-all"
+      className="surface block w-full md:w-1/3 rounded-3xl p-5 transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
     >
       <div className="flex flex-col justify-between h-full">
         <div className="flex flex-col md:flex-row justify-between">
-          <h4 className="text-lg md:text-lg font-medium mb-6 sm:mb-10 w-full text-gray-900 dark:text-gray-100 tracking-tight">
+          <h4 className="text-lg font-semibold leading-snug mb-6 sm:mb-10 w-full text-ink tracking-tight">
             {title}
           </h4>
         </div>
-        <div className="flex items-center text-gray-800 dark:text-gray-200 capsize">
+        <div className="flex items-center text-sm text-muted capsize">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
+            className="h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

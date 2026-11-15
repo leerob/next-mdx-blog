@@ -65,7 +65,7 @@ export default function About() {
                 width={400}
                 quality={100}
                 src={avatar}
-                className="rounded-md"
+                className="rounded-3xl"
               />
             </a>
             <a href="/avatar-bw.jpg">
@@ -74,7 +74,7 @@ export default function About() {
                 width={400}
                 quality={100}
                 src={avatarBW}
-                className="rounded-md"
+                className="rounded-3xl"
               />
             </a>
           </div>

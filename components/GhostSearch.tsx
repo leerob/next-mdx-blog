@@ -162,7 +162,7 @@ export default function GhostSearch({
   const sync = () => kick();
 
   return (
-    <div className="relative w-full mb-4">
+    <div className="relative w-full mt-4 mb-4">
       <input
         ref={inputRef}
         aria-label="Search articles"
@@ -187,17 +187,17 @@ export default function GhostSearch({
         onScroll={sync}
         onBlur={() => api.current?.dismiss()}
         placeholder="Search articles"
-        className="block w-full pl-4 pr-10 py-2 text-transparent caret-gray-900 dark:caret-gray-100 placeholder:text-gray-400 bg-white border border-gray-200 rounded-md dark:border-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
+        className="surface block w-full h-12 pl-5 pr-12 py-3 rounded-full border-0 focus:ring-2 focus:ring-[color:var(--fill-3)] text-transparent caret-[color:var(--text)] placeholder:text-muted-2"
       />
       <span id="ghost-search-hint" className="sr-only">
         Press Tab to complete a matching title.
       </span>
       <div
         aria-hidden="true"
-        className="absolute inset-0 pl-4 pr-10 py-2 border border-transparent overflow-hidden pointer-events-none"
+        className="absolute inset-0 pl-5 pr-12 py-3 overflow-hidden pointer-events-none"
       >
         <span ref={trackRef} className="flex items-center whitespace-pre">
-          <span ref={typedRef} className="text-gray-900 dark:text-gray-100" />
+          <span ref={typedRef} className="text-ink" />
           <span ref={ghostRef} />
           <span
             ref={tabRef}
@@ -205,14 +205,14 @@ export default function GhostSearch({
               e.preventDefault();
               api.current?.accept();
             }}
-            className="ml-2 px-1.5 rounded-md text-[11px] leading-[18px] font-semibold bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300 opacity-0 pointer-events-auto cursor-pointer will-change-transform"
+            className="ml-2 px-1.5 rounded-md text-[11px] leading-[18px] font-semibold bg-fill-3 text-ink-2 opacity-0 pointer-events-auto cursor-pointer will-change-transform"
           >
             Tab
           </span>
         </span>
       </div>
       <svg
-        className="absolute w-5 h-5 text-gray-400 right-3 top-3 dark:text-gray-300"
+        className="absolute w-5 h-5 text-muted right-4 top-3.5"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"

@@ -2,6 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Motion Studies tokens (designbookmark.com/motion): borderless surfaces,
+   translucent fills, an inverse colour for primary buttons. */
+:root {
+  --surface: #ffffff;
+  --rim: rgba(23, 24, 26, 0.06);
+  --fill-1: rgba(23, 24, 26, 0.04);
+  --fill-2: rgba(23, 24, 26, 0.07);
+  --fill-3: rgba(23, 24, 26, 0.12);
+  --text: #17181a;
+  --text-2: #3c3b37;
+  --muted: #6f6e68;
+  --muted-2: #85847e;
+  --inverse: #0e0f11;
+  --on-inverse: #f4f3f1;
+  --green: #34d17a;
+  --on-green: #04140a;
+  --orange: #e8890a;
+  --red: #e5484d;
+}
+
+.dark {
+  --surface: #1f1f1f;
+  --rim: rgba(255, 255, 255, 0.04);
+  --fill-1: rgba(255, 255, 255, 0.05);
+  --fill-2: rgba(255, 255, 255, 0.09);
+  --fill-3: rgba(255, 255, 255, 0.14);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.78);
+  --muted: #9a9a9a;
+  --muted-2: #828282;
+  --inverse: #ffffff;
+  --on-inverse: #000000;
+  --orange: #ff9f0a;
+  --red: #ff5a5f;
+}
+
+/* A surface: the one card style every new component sits on */
+.surface {
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--rim) inset;
+}
+
 ::selection {
   background-color: #47a3f3;
   color: #fefefe;
@@ -188,14 +230,6 @@ input[type='email'] {
   appearance: none;
 }
 
-.metric-card > a {
-  @apply no-underline;
-}
-
-.metric-card > p {
-  @apply my-2;
-}
-
 .step > h3 {
   @apply my-0;
 }
@@ -246,11 +280,12 @@ table {
 
 /* Ghost Suggestion letters */
 .ghost-letter {
-  @apply inline-block whitespace-pre text-gray-400 dark:text-gray-500 transition-colors duration-200 will-change-transform;
+  @apply inline-block whitespace-pre transition-colors duration-200 will-change-transform;
+  color: var(--muted-2);
 }
 
 .ghost-letter.ok {
-  @apply text-gray-900 dark:text-gray-100;
+  color: var(--text);
 }
 
 /* Roll Links: letters on little drums */
@@ -298,18 +333,20 @@ table {
 }
 
 .letter-track {
-  @apply stroke-gray-200 dark:stroke-gray-700;
+  stroke: var(--fill-3);
 }
 
 .letter-fill {
-  @apply stroke-gray-500 dark:stroke-gray-300 transition-colors duration-200;
+  @apply transition-colors duration-200;
+  stroke: var(--text-2);
   stroke-linecap: round;
   stroke-dasharray: 1 1;
   stroke-dashoffset: 1;
 }
 
 .letter-count {
-  @apply invisible text-gray-500 transition-colors duration-200;
+  @apply invisible transition-colors duration-200;
+  color: var(--muted);
 }
 
 .letter-limit.is-near .letter-fill {
@@ -336,4 +373,474 @@ table {
 .letter-pile span {
   @apply absolute left-0 top-0 font-medium text-red-500 will-change-transform;
   margin: -12px 0 0 -5px;
+}
+
+/* Prompt Box */
+.prompt-status {
+  @apply flex items-center gap-2 overflow-hidden text-sm font-medium;
+  color: var(--muted);
+}
+
+.prompt-status .mark {
+  @apply flex-none w-2 h-2 rounded-full transition-colors duration-200;
+  background: var(--text);
+}
+
+.prompt-status.think .mark {
+  animation: prompt-pulse 1s ease-in-out infinite;
+}
+
+.prompt-status.think .label {
+  background: linear-gradient(
+      90deg,
+      var(--muted-2) 20%,
+      var(--text) 50%,
+      var(--muted-2) 80%
+    )
+    0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: prompt-shine 1.4s linear infinite;
+}
+
+.prompt-status.done .mark {
+  background: var(--green);
+}
+
+.prompt-status.done .label {
+  color: var(--text-2);
+}
+
+.prompt-status.fail .mark {
+  background: var(--red);
+}
+
+.prompt-status.fail .label {
+  color: var(--red);
+}
+
+@keyframes prompt-pulse {
+  50% {
+    transform: scale(0.55);
+    opacity: 0.5;
+  }
+}
+
+@keyframes prompt-shine {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* the letter ring steps aside while the send button spins */
+.prompt-busy .letter-limit.is-on {
+  opacity: 0;
+}
+
+.prompt-send {
+  @apply relative flex-none w-8 h-8 rounded-full transition-colors duration-200;
+  background: var(--fill-3);
+  color: var(--muted);
+}
+
+.prompt-send.ready {
+  background: var(--inverse);
+  color: var(--on-inverse);
+}
+
+.prompt-send:focus-visible {
+  @apply outline-none;
+  background: var(--text-2);
+}
+
+.prompt-send i {
+  @apply absolute inset-0 grid place-items-center will-change-transform;
+}
+
+/* Avatars: grainy mesh, from the motion studies */
+[data-av] {
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(70% 70% at var(--p1), var(--av-l) 0, transparent 70%),
+    radial-gradient(60% 60% at var(--p2), var(--av-p) 0, transparent 70%),
+    radial-gradient(75% 75% at var(--p3), var(--av-b) 0, transparent 72%),
+    var(--av-a) !important;
+  background-blend-mode: overlay, normal, normal, normal, normal !important;
+}
+[data-av='1'] {
+  --av-l: #ff8fd0;
+  --av-a: #ff3fa6;
+  --av-b: #6a35ff;
+  --av-p: #ffd3ec;
+  --p1: 12% 10%;
+  --p2: 92% 8%;
+  --p3: 88% 96%;
+}
+[data-av='2'] {
+  --av-l: #7fe3ff;
+  --av-a: #2b8cff;
+  --av-b: #5a35ff;
+  --av-p: #cdf3ff;
+  --p1: 102.9% 65.6%;
+  --p2: 34.6% 107.4%;
+  --p3: -5.9% 29.2%;
+}
+[data-av='3'] {
+  --av-l: #d6ff5a;
+  --av-a: #22d39a;
+  --av-b: #0a8a8f;
+  --av-p: #efffb0;
+  --p1: 65.6% -2.9%;
+  --p2: 107.4% 65.4%;
+  --p3: 29.2% 105.9%;
+}
+[data-av='4'] {
+  --av-l: #ffb866;
+  --av-a: #ff4a5e;
+  --av-b: #c31f86;
+  --av-p: #ffe0b8;
+  --p1: 34.4% 102.9%;
+  --p2: -7.4% 34.6%;
+  --p3: 70.8% -5.9%;
+}
+[data-av='5'] {
+  --av-l: #fff27a;
+  --av-a: #ffa51f;
+  --av-b: #ff4a2e;
+  --av-p: #fff3bf;
+  --p1: -3.6% 62.9%;
+  --p2: 34.6% -7.4%;
+  --p3: 108.8% 40.1%;
+}
+[data-av='6'] {
+  --av-l: #7dffea;
+  --av-a: #1fa8ff;
+  --av-b: #3a3cff;
+  --av-p: #c9fff5;
+  --p1: 90% 12%;
+  --p2: 92% 92%;
+  --p3: 4% 88%;
+}
+[data-av='7'] {
+  --av-l: #ffd3f1;
+  --av-a: #c07bff;
+  --av-b: #ff4f9a;
+  --av-p: #f0dcff;
+  --p1: 62.9% 103.6%;
+  --p2: -7.4% 65.4%;
+  --p3: 40.1% -8.8%;
+}
+[data-av='8'] {
+  --av-l: #c2ffd6;
+  --av-a: #2fe08a;
+  --av-b: #0a9a6a;
+  --av-p: #e2ffec;
+  --p1: 37.1% -3.6%;
+  --p2: 107.4% 34.6%;
+  --p3: 59.9% 108.8%;
+}
+[data-av='9'] {
+  --av-l: #ffe3b5;
+  --av-a: #ff8a6a;
+  --av-b: #ff3f86;
+  --av-p: #ffe6d8;
+  --p1: 10% 88%;
+  --p2: 8% 8%;
+  --p3: 96% 12%;
+}
+[data-av='10'] {
+  --av-l: #bfa0ff;
+  --av-a: #5a3cff;
+  --av-b: #1a1ab0;
+  --av-p: #e0d2ff;
+  --p1: 103.6% 37.1%;
+  --p2: 65.4% 107.4%;
+  --p3: -8.8% 59.9%;
+}
+[data-av='11'] {
+  --av-l: #f6ff86;
+  --av-a: #8ae83a;
+  --av-b: #1fb86a;
+  --av-p: #fbffc8;
+  --p1: -2.9% 34.4%;
+  --p2: 65.4% -7.4%;
+  --p3: 105.9% 70.8%;
+}
+[data-av='12'] {
+  --av-l: #ffa3cd;
+  --av-a: #e03cff;
+  --av-b: #6a2cff;
+  --av-p: #ffd2ea;
+  --p1: 88% 90%;
+  --p2: 8% 92%;
+  --p3: 12% 4%;
+}
+
+/* Springy Input */
+.si-field {
+  @apply relative w-full overflow-hidden rounded-full;
+  height: 60px;
+  background: var(--fill-1);
+  transition:
+    box-shadow 0.25s,
+    background 0.3s;
+  will-change: width, transform;
+}
+
+.si-field.focus {
+  box-shadow: 0 0 0 1.5px var(--fill-3) inset;
+}
+
+.si-field.err {
+  box-shadow: 0 0 0 1.5px var(--orange) inset;
+}
+
+.si-field.ok {
+  background: var(--green);
+  box-shadow: none;
+}
+
+.si-label {
+  @apply absolute whitespace-nowrap pointer-events-none text-lg;
+  left: 24px;
+  top: 17px;
+  color: var(--muted);
+  transform-origin: left top;
+  transition: opacity 0.2s;
+}
+
+.si-box {
+  @apply absolute;
+  left: 24px;
+  right: 64px;
+  top: 25px;
+  height: 26px;
+}
+
+.si-layer {
+  @apply absolute inset-0 overflow-hidden whitespace-pre pointer-events-none;
+}
+
+.si-layer-in {
+  @apply absolute left-0 top-0 whitespace-pre;
+  height: 26px;
+  line-height: 26px;
+}
+
+.si-ch {
+  @apply inline-block text-lg font-medium;
+  color: var(--text);
+  line-height: 26px;
+  font-kerning: none;
+  transform-origin: 50% 80%;
+}
+
+.si-ch.in {
+  animation: si-drop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.si-ch.out {
+  @apply absolute top-0;
+  animation: si-out 0.34s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+
+.si-ch.nope {
+  animation: si-nope 0.46s ease both;
+  animation-delay: var(--d, 0ms);
+}
+
+.si-ch.fly {
+  animation: si-fly 0.42s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes si-drop {
+  0% {
+    transform: translateY(14px) rotate(-16deg) scale(0.5);
+    opacity: 0;
+    filter: blur(3px);
+  }
+  55% {
+    transform: translateY(-3px) rotate(4deg) scale(1.1);
+    opacity: 1;
+    filter: none;
+  }
+  80% {
+    transform: translateY(1px) rotate(-1deg) scale(0.98);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes si-out {
+  to {
+    transform: translateY(-18px) rotate(20deg) scale(0.5);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+@keyframes si-nope {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: translateX(-4px) rotate(-8deg);
+  }
+  40% {
+    transform: translateX(4px) rotate(6deg);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(1px);
+  }
+}
+
+@keyframes si-fly {
+  to {
+    transform: translateY(-28px) scale(0.6);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+.si-email {
+  @apply absolute inset-0 w-full h-full border-0 p-0 bg-transparent text-lg font-medium focus:outline-none focus:ring-0;
+  line-height: 26px;
+  font-kerning: none;
+  letter-spacing: 0;
+  color: transparent;
+  caret-color: transparent;
+}
+
+.si-email::selection {
+  background: var(--fill-3);
+  color: transparent;
+}
+
+.si-caret {
+  @apply absolute left-0 rounded-sm pointer-events-none opacity-0;
+  top: 3px;
+  width: 2px;
+  height: 20px;
+  background: var(--text);
+  transform-origin: left center;
+}
+
+.si-caret.blink {
+  animation: si-blink 1s steps(1) infinite;
+}
+
+@keyframes si-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.si-go {
+  @apply absolute grid place-items-center rounded-full border-0 cursor-pointer;
+  right: 8px;
+  top: 8px;
+  width: 44px;
+  height: 44px;
+  background: var(--inverse);
+  color: var(--on-inverse);
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s;
+}
+
+.si-go svg {
+  @apply w-5 h-5 transition-transform duration-200;
+  grid-area: 1 / 1;
+}
+
+.si-go .submit-spin {
+  @apply w-5 h-5 rounded-full opacity-0 transition-opacity duration-200;
+  grid-area: 1 / 1;
+  animation: si-spin 0.7s linear infinite;
+}
+
+.si-field.busy .si-go svg {
+  transform: scale(0);
+}
+
+.si-field.busy .si-go .submit-spin {
+  @apply opacity-100;
+}
+
+@keyframes si-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.si-go.idle {
+  transform: scale(0.82);
+  opacity: 0.35;
+}
+
+.si-go:active {
+  transform: scale(0.88);
+}
+
+.si-field.ok .si-go,
+.si-field.ok .si-label,
+.si-field.ok .si-box {
+  @apply opacity-0 pointer-events-none;
+}
+
+.si-done {
+  @apply absolute inset-0 flex items-center justify-center gap-2 whitespace-nowrap text-lg font-medium opacity-0 pointer-events-none;
+  color: var(--on-green);
+  transform: scale(0.9);
+}
+
+.si-done svg {
+  @apply w-5 h-5;
+}
+
+.si-done path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+}
+
+.si-field.ok .si-done {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.3s 0.15s,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+
+.si-field.ok .si-done path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.45s cubic-bezier(0.65, 0, 0.35, 1) 0.3s;
+}
+
+.si-help {
+  @apply text-sm;
+  min-height: 20px;
+  color: var(--muted-2);
+  transition: color 0.2s;
+}
+
+.si-help.err {
+  color: var(--orange);
+}
+
+/* Dynamic Menu toggle lines */
+.dyn-line {
+  @apply absolute rounded-sm will-change-transform;
+  left: 3px;
+  right: 3px;
+  top: 11px;
+  height: 2px;
+  background: currentColor;
 }

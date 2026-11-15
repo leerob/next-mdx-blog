@@ -6,7 +6,7 @@ import Container from '../components/Container';
 import BlogPostCard from '../components/BlogPostCard';
 import ResearchPaperCard from '../components/ResearchPaperCard';
 import Subscribe from '../components/Subscribe';
-import VideoCard from '../components/VideoCard';
+import VideoList from '../components/VideoList';
 import RollText from '../components/RollText';
 
 export default function Home() {
@@ -44,18 +44,40 @@ export default function Home() {
           <h3 className="font-bold text-2xl md:text-4xl tracking-tight mb-6 text-black dark:text-white">
             Latest Research
           </h3>
-          <div className="flex gap-6 flex-col md:flex-row">
+          <div className="flex gap-4 flex-col md:flex-row w-full">
             <ResearchPaperCard
-              title="Rewarding Chatbots for Real-World Engagement with Millions of Users"
-              venue="arXiv 2023"
-              href="https://arxiv.org/abs/2303.06135"
-              arxivId="2303.06135"
+              title="CyclicJudge: Mitigating Judge Bias Efficiently in LLM-based Evaluation"
+              venue="EMNLP 2026"
+              authors={[
+                'Ziyi Zhu',
+                'Olivier Tieleman',
+                'Alexey Bukhtiyarov',
+                'Jinghong Chen'
+              ]}
+              pages="4527–4539"
+              anthologyId="2026.emnlp-main.197"
+              href="https://aclanthology.org/2026.emnlp-main.197/"
+              pdf="https://aclanthology.org/2026.emnlp-main.197.pdf"
+              arxivId="2603.01865"
               gradient="from-[#FDE68A] via-[#FCA5A5] to-[#FECACA]"
             />
             <ResearchPaperCard
               title="DIAL: Direct Iterative Adversarial Learning for Realistic Multi-Turn Dialogue Simulation"
-              venue="arXiv 2025"
-              href="https://arxiv.org/abs/2512.20773"
+              venue="Findings of EMNLP 2026"
+              authors={[
+                'Ziyi Zhu',
+                'Olivier Tieleman',
+                'Caitlin A. Stamatis',
+                'Luka Smyth',
+                'Thomas D. Hull',
+                'Daniel Reid Cahn',
+                'Jinghong Chen',
+                'Matteo Malgaroli'
+              ]}
+              pages="925–942"
+              anthologyId="2026.findings-emnlp.46"
+              href="https://aclanthology.org/2026.findings-emnlp.46/"
+              pdf="https://aclanthology.org/2026.findings-emnlp.46.pdf"
               arxivId="2512.20773"
               gradient="from-[#6EE7B7] via-[#3B82F6] to-[#9333EA]"
             />
@@ -86,7 +108,7 @@ export default function Home() {
           <h3 className="font-bold text-2xl md:text-4xl tracking-tight mb-6 mt-16 text-black dark:text-white">
             Featured Posts
           </h3>
-          <div className="flex gap-6 flex-col md:flex-row">
+          <div className="flex gap-4 flex-col md:flex-row">
             <BlogPostCard
               title="Evolution of Policy Gradient Methods"
               slug="policy-optimization"
@@ -130,35 +152,34 @@ export default function Home() {
             Music and art are the guiding lights of the world. This channel
             features some of my acoustic guitar cover of popular songs.
           </p>
-          <VideoCard
-            index="01"
-            href="https://youtu.be/JqTIkdMLcHw"
-            length="02:39"
-            title="Sungha Jung - Seventh #9"
-          />
-          <VideoCard
-            index="02"
-            href="https://youtu.be/BS11lif_yuM"
-            length="03:16"
-            title="아이유 IU - Through The Night"
-          />
-          <VideoCard
-            index="03"
-            href="https://youtu.be/CgwppQEoTkk"
-            length="04:46"
-            title="松井佑贵 Yuki Matsui - Sunny Day"
-          />
-          <VideoCard
-            index="04"
-            href="https://youtu.be/3Tr_-s0pZjs"
-            length="03:03"
-            title="Secret Base ～君がくれたもの～"
-          />
-          <VideoCard
-            index="05"
-            href="https://youtu.be/z2txWTlBmTQ"
-            length="05:18"
-            title="松井佑贵 Yuki Matsui - Rider"
+          <VideoList
+            videos={[
+              {
+                href: 'https://youtu.be/JqTIkdMLcHw',
+                length: '02:39',
+                title: 'Sungha Jung - Seventh #9'
+              },
+              {
+                href: 'https://youtu.be/BS11lif_yuM',
+                length: '03:16',
+                title: '아이유 IU - Through The Night'
+              },
+              {
+                href: 'https://youtu.be/CgwppQEoTkk',
+                length: '04:46',
+                title: '松井佑贵 Yuki Matsui - Sunny Day'
+              },
+              {
+                href: 'https://youtu.be/3Tr_-s0pZjs',
+                length: '03:03',
+                title: 'Secret Base ～君がくれたもの～'
+              },
+              {
+                href: 'https://youtu.be/z2txWTlBmTQ',
+                length: '05:18',
+                title: '松井佑贵 Yuki Matsui - Rider'
+              }
+            ]}
           />
           <a
             target="_blank"

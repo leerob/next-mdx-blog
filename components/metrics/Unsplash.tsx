@@ -12,7 +12,7 @@ export default function UnsplashCard() {
   const link = 'https://unsplash.com/@ziyizhu';
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 my-2 w-full">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 w-full">
       <MetricCard
         header="Unsplash Downloads"
         link={link}

@@ -5,7 +5,8 @@ export const config = {
 };
 
 export default async function handler(req: NextRequest) {
-  const ids = ['2303.06135', '2512.20773'];
+  // arXiv IDs; Semantic Scholar merges them with the ACL Anthology versions
+  const ids = ['2603.01865', '2512.20773'];
 
   const results = await Promise.all(
     ids.map(async (id) => {

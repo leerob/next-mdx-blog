@@ -57,14 +57,14 @@ export default function Container(props) {
           <a href="#skip" className="skip-nav">
             Skip to content
           </a>
-          <div className="ml-[-0.60rem]">
+          <div className="flex items-center md:-ml-3.5">
             <MobileMenu />
             <NavTabs />
           </div>
           <button
             aria-label="Toggle Dark Mode"
             type="button"
-            className="w-9 h-9 bg-gray-200 rounded-lg dark:bg-gray-600 flex items-center justify-center  hover:ring-2 ring-gray-300  transition-all"
+            className="surface w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90"
             onClick={() =>
               setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
             }

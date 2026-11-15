@@ -24,11 +24,13 @@ type Drop = {
 export default function LetterLimit({
   inputRef,
   limit,
-  resetKey
+  resetKey,
+  className = ''
 }: {
-  inputRef: RefObject<HTMLInputElement>;
+  inputRef: RefObject<HTMLInputElement | HTMLTextAreaElement>;
   limit: number;
   resetKey?: unknown;
+  className?: string;
 }) {
   const boxRef = useRef<HTMLSpanElement>(null);
   const meterRef = useRef<SVGSVGElement>(null);
@@ -144,7 +146,7 @@ export default function LetterLimit({
     <span
       ref={boxRef}
       aria-hidden="true"
-      className="letter-limit absolute right-[124px] top-1 h-8 flex items-center gap-1.5 pointer-events-none"
+      className={`letter-limit relative h-8 flex items-center gap-1.5 pointer-events-none ${className}`}
     >
       <span
         ref={countRef}
@@ -165,7 +167,7 @@ export default function LetterLimit({
           pathLength="1"
         />
       </svg>
-      <span ref={pileRef} className="letter-pile absolute right-2 top-1/2" />
+      <span ref={pileRef} className="letter-pile absolute right-2.5 top-1/2" />
     </span>
   );
 }

@@ -7,6 +7,20 @@ module.exports = {
     extend: {
       colors: {
         'blue-opaque': 'rgb(13 42 148 / 18%)',
+        surface: 'var(--surface)',
+        fill: {
+          1: 'var(--fill-1)',
+          2: 'var(--fill-2)',
+          3: 'var(--fill-3)'
+        },
+        ink: 'var(--text)',
+        'ink-2': 'var(--text-2)',
+        muted: 'var(--muted)',
+        'muted-2': 'var(--muted-2)',
+        inverse: 'var(--inverse)',
+        'on-inverse': 'var(--on-inverse)',
+        mint: 'var(--green)',
+        'on-mint': 'var(--on-green)',
         gray: {
           0: '#fff',
           100: '#fafafa',

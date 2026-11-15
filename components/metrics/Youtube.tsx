@@ -12,7 +12,7 @@ export default function YouTubeCard() {
   const link = 'https://www.youtube.com/@neoziyism';
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 my-2 w-full">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 w-full">
       <MetricCard
         header="YouTube Subscribers"
         link={link}
