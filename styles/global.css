@@ -44,6 +44,29 @@
   box-shadow: 0 0 0 1px var(--rim) inset;
 }
 
+/* Pull cord: the invisible button that sits on the bead and follows it */
+.cord-grab {
+  position: absolute;
+  left: -22px;
+  top: -12px;
+  width: 44px;
+  height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+.cord-grab.is-held {
+  cursor: grabbing;
+}
+.cord-grab:focus-visible {
+  outline: 2px solid var(--muted);
+  outline-offset: 0;
+}
+
 /* Parallax ticket: one side of the card, copied from the original's .side.
    Its drop shadow is drawn at the original's strength (--sh: 0), so it is
    invisible, but keep it: without it, iOS WebKit stops hiding the side's
