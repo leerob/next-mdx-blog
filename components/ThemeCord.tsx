@@ -9,7 +9,7 @@ import { S, step, atRest, register, after, cancel, kick } from 'lib/spring';
 // assumed, so the cord still reaches the top when the nav's height changes
 // (the mobile menu is taller than the slot, for one).
 const BOX = 40,
-  REST = 6, // where the bead hangs, below the slot's top: it rests mid-slot
+  REST = 0, // where the bead hangs from: its cap at the slot's top, the bulb mid-slot
   TOP0 = 32, // the nav's top padding: the first guess, before measuring
   N = 8, // links in the cord
   CLICK = 22, // stretch that flips the switch (the original's)
@@ -33,7 +33,48 @@ export default function ThemeCord() {
   const light = resolvedTheme === 'light';
 
   useEffect(() => setMounted(true), []);
-  toggleRef.current = () => setTheme(light ? 'dark' : 'light');
+  // flip the theme, revealing the new one in a circle that grows from the
+  // bead (View Transitions); instant where unsupported or motion is reduced
+  toggleRef.current = () => {
+    const next = light ? 'dark' : 'light';
+    const apply = () => {
+      // set the class here so the change lands inside the transition
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      setTheme(next);
+    };
+    const doc = document as Document & {
+      startViewTransition?: (update: () => void) => { ready: Promise<void> };
+    };
+    if (
+      !doc.startViewTransition ||
+      matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+      return apply();
+    // centred on the bulb at rest (a pull has it stretched down right now):
+    // the slot's middle, the bulb's centre 20px below where it hangs from
+    const slot = beadRef.current!.parentElement!.getBoundingClientRect();
+    const x = slot.left + BOX / 2,
+      y = slot.top + REST + 20;
+    const r = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y)
+    );
+    doc.startViewTransition(apply).ready.then(() =>
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${r}px at ${x}px ${y}px)`
+          ]
+        },
+        {
+          duration: 1000,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          pseudoElement: '::view-transition-new(root)'
+        }
+      )
+    );
+  };
 
   useEffect(() => {
     const path = pathRef.current!,
@@ -305,15 +346,40 @@ export default function ThemeCord() {
           strokeLinejoin="round"
         />
       </svg>
+      {/* the bead, in the demo's lamp colours: a grey cap and a bulb that is
+          lit (yellow, with a sun) in light mode and dim (with a moon) in dark */}
       <i
         ref={beadRef}
         aria-hidden="true"
-        className="absolute left-[-8px] top-[-3px] w-4 h-[30px] rounded-full bg-inverse will-change-transform"
+        className="absolute left-[-14px] top-0 flex flex-col items-center w-7 will-change-transform"
         style={{
-          transformOrigin: '8px 3px',
+          transformOrigin: '14px 0',
           transform: `translate(${BOX / 2}px,${REST}px)`
         }}
-      />
+      >
+        <span className="w-[9px] h-[7px] -mb-px rounded-[2px] bg-[color:var(--muted-2)]" />
+        <span className="grid place-items-center w-7 h-7 rounded-full bg-[#ffd23f] text-[#3a2a00] dark:bg-white/[.14] dark:text-gray-200 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+          {mounted && (
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.4}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4"
+            >
+              <path
+                d={
+                  light
+                    ? 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z'
+                    : 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'
+                }
+              />
+            </svg>
+          )}
+        </span>
+      </i>
       {/* the one real control: it sits on the bead and follows it */}
       <button
         ref={grabRef}
