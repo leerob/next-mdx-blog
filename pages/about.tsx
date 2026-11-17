@@ -14,16 +14,13 @@ export default function About() {
         </h1>
         <div className="mb-8 prose max-w-none leading-6">
           <p>
-            I'm passionate about advancing <strong>machine intelligence</strong>{' '}
-            through research in conversational AI, alignment, and reinforcement
-            learning, while also exploring <strong>quantitative finance</strong>
-            . I focus on developing AI systems that are not only capable but
-            reliably aligned with human values, using data-driven mathematical
-            frameworks to tackle fundamental challenges in how AI systems learn,
-            reason, and interact. Whether investigating new RL paradigms,
-            alignment techniques, or quantitative modelling, I approach problems
-            with both technical rigour and an artist's sensibility, believing
-            that elegant solutions require creative insight.
+            I'm passionate about advancing machine intelligence through research
+            in conversational AI, alignment, and reinforcement learning, while
+            also exploring quantitative finance. I focus on developing AI
+            systems that are not only capable but reliably aligned with human
+            values, using data-driven mathematical frameworks to tackle
+            fundamental challenges in how AI systems learn, reason, and
+            interact.
           </p>
           <h2>Biography</h2>
           <h3>Work Experiences</h3>
