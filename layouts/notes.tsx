@@ -5,14 +5,14 @@ import type { PropsWithChildren } from 'react';
 import { Snippet } from 'lib/types';
 import { urlForImage } from 'lib/sanity';
 
-export default function SnippetLayout({
+export default function NoteLayout({
   children,
   snippet
 }: PropsWithChildren<{ snippet: Snippet }>) {
   return (
     <Container
-      title={`${snippet.title} - Code Snippet`}
-      description="A collection of code snippets – including serverless functions, Node.js scripts, and CSS tricks."
+      title={`${snippet.title} – Ziyi Zhu`}
+      description={snippet.description}
     >
       <article className="flex flex-col justify-center items-start max-w-2xl mx-auto mb-16 w-full">
         <div className="flex justify-between w-full mb-8">

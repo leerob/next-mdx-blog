@@ -11,7 +11,7 @@ export default function FunctionCard({
 }) {
   return (
     <Link
-      href={`/snippets/${slug}`}
+      href={`/notes/${slug}`}
       className="surface block w-full rounded-3xl p-5 transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
       {...rest}
     >

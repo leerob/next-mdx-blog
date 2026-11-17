@@ -1,16 +1,16 @@
 import { MDXRemote } from 'next-mdx-remote';
-import SnippetLayout from 'layouts/snippets';
+import NoteLayout from 'layouts/notes';
 import components from 'components/MDXComponents';
 import { snippetsQuery, snippetSlugsQuery } from 'lib/queries';
 import { sanityClient, getClient } from 'lib/sanity-server';
 import { mdxToHtml } from 'lib/mdx';
 import { Snippet } from 'lib/types';
 
-export default function SnippetsPage({ snippet }: { snippet: Snippet }) {
+export default function NotePage({ snippet }: { snippet: Snippet }) {
   return (
-    <SnippetLayout snippet={snippet}>
+    <NoteLayout snippet={snippet}>
       <MDXRemote {...snippet.content} components={components} />
-    </SnippetLayout>
+    </NoteLayout>
   );
 }
 
