@@ -12,7 +12,7 @@ export default function About() {
         <h1 className="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white">
           About Me
         </h1>
-        <div className="mb-8 prose leading-6">
+        <div className="mb-8 prose max-w-none leading-6">
           <p>
             I'm passionate about advancing <strong>machine intelligence</strong>{' '}
             through research in conversational AI, alignment, and reinforcement

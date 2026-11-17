@@ -9,15 +9,16 @@ export default async function handler(req: NextRequest) {
     'https://api.semanticscholar.org/graph/v1/author/2214424924?fields=paperCount,citationCount'
   );
 
+  // a failed lookup (usually a 429 rate limit) must not be cached, or it
+  // would replace the last good counts for a day
   if (!res.ok) {
     return new Response(
       JSON.stringify({ paperCount: null, citationCount: null }),
       {
-        status: 200,
+        status: 503,
         headers: {
           'content-type': 'application/json',
-          'cache-control':
-            'public, s-maxage=86400, stale-while-revalidate=43200'
+          'cache-control': 'no-store'
         }
       }
     );
@@ -34,7 +35,8 @@ export default async function handler(req: NextRequest) {
       status: 200,
       headers: {
         'content-type': 'application/json',
-        'cache-control': 'public, s-maxage=86400, stale-while-revalidate=43200'
+        'cache-control':
+          'public, s-maxage=86400, stale-while-revalidate=43200, stale-if-error=86400'
       }
     }
   );

@@ -200,8 +200,9 @@ export default function ResearchPaperCard(paper: Paper) {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/45" />
           <div data-depth="0.9" className={cn(layer, 'inset-0')}>
+            {/* the conference only; the track (Findings or Main) is on the back */}
             <span className="absolute left-5 top-5 text-xs font-medium px-2.5 py-1 rounded-full bg-black/25 text-white">
-              {venue}
+              {conference}
             </span>
             <h4 className="absolute left-5 right-5 bottom-[52px] text-xl font-bold leading-snug tracking-tight text-white">
               {title}
