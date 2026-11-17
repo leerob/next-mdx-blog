@@ -247,16 +247,14 @@ export default function VideoList({ videos }: { videos: Video[] }) {
               style={{ top: 0 }}
             >
               <div className="flex items-center gap-1.5">
-                {['Acoustic', 'Fingerstyle', v.duet ? 'Duet' : 'Solo'].map(
-                  (tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs font-medium leading-[18px] px-2.5 py-[5px] rounded-full bg-fill-2 text-ink-2"
-                    >
-                      {tag}
-                    </span>
-                  )
-                )}
+                {['Acoustic', v.duet ? 'Duet' : 'Solo'].map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-xs font-medium leading-[18px] px-2.5 py-[5px] rounded-full bg-fill-2 text-ink-2"
+                  >
+                    {tag}
+                  </span>
+                ))}
                 <a
                   href={v.href}
                   target="_blank"
