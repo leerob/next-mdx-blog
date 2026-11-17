@@ -5,8 +5,8 @@ import RollText from 'components/RollText';
 
 const linkClass = 'roll-link text-gray-500 transition-colors';
 
-// Three columns on desktop, one on phones: this site, work profiles and
-// social accounts. External links open in a new tab.
+// Three columns on desktop, one on phones: this site, professional profiles,
+// YouTube and Unsplash. External links open in a new tab.
 const COLUMNS = [
   [
     { href: '/', text: 'Home' },
@@ -14,6 +14,7 @@ const COLUMNS = [
     { href: 'https://portfolio.ziyizhu.com/', text: 'Portfolio' }
   ],
   [
+    { href: 'https://www.linkedin.com/in/ziyizhu/', text: 'LinkedIn' },
     { href: 'https://github.com/ziyi-zhu', text: 'GitHub' },
     {
       href: 'https://scholar.google.com/citations?user=wR-Ssa4AAAAJ',
@@ -25,7 +26,6 @@ const COLUMNS = [
     }
   ],
   [
-    { href: 'https://www.linkedin.com/in/ziyizhu/', text: 'LinkedIn' },
     { href: 'https://www.youtube.com/@neoziyism', text: 'YouTube' },
     { href: 'https://unsplash.com/@ziyizhu', text: 'Unsplash' }
   ]

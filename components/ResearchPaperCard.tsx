@@ -29,8 +29,7 @@ const layer = 'absolute will-change-transform pointer-events-none';
 // tilts toward the cursor and each layer moves by its own depth, so the
 // mesh and the title separate in space, while a glare follows the
 // cursor. Click flips it on a spring that overshoots a little, showing the
-// paper's details and links on the back. Untouched, it floats gently so the
-// depth is visible without a cursor (only while it is on screen).
+// paper's details and links on the back. Untouched, it rests flat.
 export default function ResearchPaperCard(paper: Paper) {
   const { title, venue, authors, pages, anthologyId, href, pdf, arxivId, hue } =
     paper;
@@ -63,15 +62,7 @@ export default function ResearchPaperCard(paper: Paper) {
     const F = S(0, 170, 15); // flip angle, overshoots a little
     let gx = 50,
       gy = 30,
-      hover = false,
-      onScreen = false,
-      clock = 0;
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const seen = new IntersectionObserver(([e]) => {
-      onScreen = e.isIntersecting;
-      kick();
-    });
-    seen.observe(stage);
+      hover = false;
 
     flipRef.current = (to) => {
       if (F.t === (to ? 180 : 0)) return;
@@ -107,15 +98,10 @@ export default function ResearchPaperCard(paper: Paper) {
 
     const unregister = register({
       frame(dt) {
-        clock += dt;
         if (hover) {
           RX.t = -(gy / 50 - 1) * TILT;
           RY.t = (gx / 50 - 1) * TILT;
           G.t = 1;
-        } else if (onScreen && !still) {
-          RX.t = Math.sin(clock * 0.9) * 4;
-          RY.t = Math.cos(clock * 0.7) * 7;
-          G.t = 0.25;
         } else {
           RX.t = 0;
           RY.t = 0;
@@ -135,11 +121,7 @@ export default function ResearchPaperCard(paper: Paper) {
         glare.style.setProperty('--gx', gx + '%');
         glare.style.setProperty('--gy', gy + '%');
       },
-      // floating keeps it moving while on screen; otherwise sleep at rest
-      idle: () =>
-        !hover &&
-        !(onScreen && !still) &&
-        [RX, RY, G, LIFT, F].every((s) => atRest(s))
+      idle: () => !hover && [RX, RY, G, LIFT, F].every((s) => atRest(s))
     });
 
     return () => {
@@ -147,7 +129,6 @@ export default function ResearchPaperCard(paper: Paper) {
       stage.removeEventListener('pointerleave', leave);
       stage.removeEventListener('pointerdown', down);
       window.removeEventListener('pointerup', up);
-      seen.disconnect();
       unregister();
     };
   }, []);
