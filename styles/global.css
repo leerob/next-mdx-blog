@@ -157,15 +157,10 @@ html {
   @apply visible;
 }
 
-.prose img {
-  /* Don't apply styles to next/image */
+/* next/image components manage their own layout; markdown images keep the
+   typography plugin's spacing */
+.prose img[data-nimg] {
   @apply m-0;
-}
-
-.prose > :first-child {
-  /* Override removing top margin, causing layout shift */
-  margin-top: 1.25em !important;
-  margin-bottom: 1.25em !important;
 }
 
 .token.comment,
@@ -228,15 +223,6 @@ pre[class*='language-'] {
   @apply text-ink;
 }
 
-pre::-webkit-scrollbar {
-  display: none;
-}
-
-pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
 .rehype-code-title {
   @apply px-5 py-3 font-mono text-sm font-semibold text-ink-2 bg-fill-2 rounded-t-2xl;
 }
@@ -244,10 +230,6 @@ pre {
 .rehype-code-title + pre,
 .rehype-code-title + .code-block > pre {
   @apply mt-0 rounded-t-none;
-}
-
-.highlight-line {
-  @apply block px-4 -mx-4 bg-gray-100 border-l-4 border-blue-500 dark:bg-gray-800;
 }
 
 /* Remove Safari input shadow on mobile */
@@ -315,17 +297,20 @@ table {
   margin-top: 0.75em !important;
 }
 
-/* Toggle: plain <details><summary>, styled like a Notion toggle */
+/* Toggle: plain <details><summary>, styled like a Notion toggle. The
+   chevron sits in a 1.5rem indent and the content is indented by the same
+   amount, so the label and the content line up. The content keeps the
+   typography plugin's own styles (lists, code, math). */
 .prose details {
   margin: 0.75em 0 1.5em;
+  padding-left: 1.5rem;
 }
 
 .prose details > summary {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-left: -0.375rem;
-  padding: 0.125rem 0.625rem 0.125rem 0.5rem;
+  margin-left: -1.5rem;
+  padding: 0.125rem 0.625rem 0.125rem 0;
   border-radius: 8px;
   color: var(--muted);
   font-weight: 500;
@@ -341,13 +326,14 @@ table {
   display: none;
 }
 
-/* Chevron drawn from two borders: points right, turns down when open */
+/* Chevron drawn from two borders, centred in the 1.5rem indent: points
+   right, turns down when open */
 .prose details > summary::before {
   content: '';
   flex: none;
   width: 0.4em;
   height: 0.4em;
-  margin-right: 0.1em;
+  margin-inline: calc((1.5rem - 0.4em) / 2);
   border-right: 1.75px solid currentColor;
   border-bottom: 1.75px solid currentColor;
   transform: rotate(-45deg);
@@ -372,17 +358,13 @@ table {
   outline-offset: 2px;
 }
 
-/* Content: indented behind a continuous bar, like a quote. Spacing uses
-   padding rather than margins so the bar has no gaps. */
-.prose details > summary ~ * {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding: 0.375em 0 0.375em 1rem;
-  border-left: 3px solid var(--fill-3);
+/* only trim the gap below the label and after the last block */
+.prose details > summary + * {
+  margin-top: 0.5rem;
 }
 
-.prose details > summary + * {
-  margin-top: 0.5rem !important;
+.prose details > :last-child {
+  margin-bottom: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -399,10 +381,6 @@ table {
   overflow-y: hidden;
   max-width: 100%;
   padding: 0.5rem 0;
-}
-
-.katex {
-  font-size: 1em;
 }
 
 .katex-display > .katex {
