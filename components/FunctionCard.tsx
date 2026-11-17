@@ -17,8 +17,9 @@ export default function FunctionCard({
     >
       <Image
         alt={title}
-        height={40}
-        width={40}
+        // 48px, the size of the video thumbnails on the home page
+        height={48}
+        width={48}
         src={urlForImage(logo).url()}
         className="rounded-[22%]"
       />
