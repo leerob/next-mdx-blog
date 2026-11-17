@@ -44,6 +44,14 @@
   box-shadow: 0 0 0 1px var(--rim) inset;
 }
 
+/* Theme change: the cord reveals the new theme in a growing circle (see
+   ThemeCord), so the browser's default cross-fade is switched off */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* Pull cord: the invisible button that sits on the bead and follows it */
 .cord-grab {
   position: absolute;
