@@ -177,7 +177,8 @@ export default function Home() {
               {
                 href: 'https://youtu.be/hhS-thBlBbw',
                 length: '03:22',
-                title: 'Aimer - Kataomoi'
+                title: 'Aimer - Kataomoi',
+                duet: true
               },
               {
                 href: 'https://youtu.be/NlaUZfxdoEQ',
