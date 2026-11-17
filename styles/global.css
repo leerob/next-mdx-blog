@@ -315,17 +315,20 @@ table {
   margin-top: 0.75em !important;
 }
 
-/* Toggle: plain <details><summary>, styled like a Notion toggle */
+/* Toggle: plain <details><summary>, styled like a Notion toggle. The
+   chevron sits in a 1.5rem indent and the content is indented by the same
+   amount, so the label and the content line up. The content keeps the
+   typography plugin's own styles (lists, code, math). */
 .prose details {
   margin: 0.75em 0 1.5em;
+  padding-left: 1.5rem;
 }
 
 .prose details > summary {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-left: -0.375rem;
-  padding: 0.125rem 0.625rem 0.125rem 0.5rem;
+  margin-left: -1.5rem;
+  padding: 0.125rem 0.625rem 0.125rem 0;
   border-radius: 8px;
   color: var(--muted);
   font-weight: 500;
@@ -341,13 +344,14 @@ table {
   display: none;
 }
 
-/* Chevron drawn from two borders: points right, turns down when open */
+/* Chevron drawn from two borders, centred in the 1.5rem indent: points
+   right, turns down when open */
 .prose details > summary::before {
   content: '';
   flex: none;
   width: 0.4em;
   height: 0.4em;
-  margin-right: 0.1em;
+  margin-inline: calc((1.5rem - 0.4em) / 2);
   border-right: 1.75px solid currentColor;
   border-bottom: 1.75px solid currentColor;
   transform: rotate(-45deg);
@@ -372,17 +376,13 @@ table {
   outline-offset: 2px;
 }
 
-/* Content: indented behind a continuous bar, like a quote. Spacing uses
-   padding rather than margins so the bar has no gaps. */
-.prose details > summary ~ * {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding: 0.375em 0 0.375em 1rem;
-  border-left: 3px solid var(--fill-3);
+/* only trim the gap below the label and after the last block */
+.prose details > summary + * {
+  margin-top: 0.5rem;
 }
 
-.prose details > summary + * {
-  margin-top: 0.5rem !important;
+.prose details > :last-child {
+  margin-bottom: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
