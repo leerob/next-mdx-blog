@@ -19,6 +19,16 @@ module.exports = {
       }
     ]
   },
+  async redirects() {
+    return [
+      { source: '/snippets', destination: '/notes', permanent: true },
+      {
+        source: '/snippets/:slug',
+        destination: '/notes/:slug',
+        permanent: true
+      }
+    ];
+  },
   async headers() {
     return [
       {

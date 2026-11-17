@@ -10,7 +10,7 @@ const ITEMS = [
   { href: '/guestbook', text: 'Guestbook' },
   { href: '/dashboard', text: 'Dashboard' },
   { href: '/blog', text: 'Blog' },
-  { href: '/snippets', text: 'Snippets' },
+  { href: '/notes', text: 'Notes' },
   { href: 'https://portfolio.ziyizhu.com/', text: 'Portfolio' }
 ];
 

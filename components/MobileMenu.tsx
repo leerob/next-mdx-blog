@@ -18,17 +18,19 @@ const LINKS = [
   { href: '/guestbook', text: 'Guestbook' },
   { href: '/dashboard', text: 'Dashboard' },
   { href: '/blog', text: 'Blog' },
-  { href: '/snippets', text: 'Snippets' },
+  { href: '/notes', text: 'Notes' },
   { href: 'https://portfolio.ziyizhu.com/', text: 'Portfolio' }
 ];
 
-const PILL_W = 40, // collapsed: a round icon button, like the theme toggle
+// collapsed: a pill with the name and the toggle, as in the original
+// (20px inset + ~58px name + 12px gap + 24px icon + 8px inset)
+const PILL_W = 122,
   HEAD = 40, // closed: same height as the theme toggle
   HEAD_OPEN = 52, // open: the example's header height,
   ROW = 48;
 
-// Dynamic Menu (designbookmark.com/motion#db-dynamic-menu): a round button
-// with a two line toggle. Open, it springs into a panel: width and height have
+// Dynamic Menu (designbookmark.com/motion#db-dynamic-menu): a pill with the
+// name and a two line toggle. Open, it springs into a panel: width and height have
 // their own springs, the height a little softer so the panel lands after it
 // has widened. The lines meet in the middle and turn into a cross, and the
 // links rise in one by one, dropping away in reverse when it closes.
@@ -40,7 +42,6 @@ export default function MobileMenu() {
   const b1Ref = useRef<HTMLElement>(null);
   const b2Ref = useRef<HTMLElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const labelRef = useRef<HTMLSpanElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const liRefs = useRef<(HTMLLIElement | null)[]>([]);
   const setRef = useRef<(o: boolean) => void>(() => {});
@@ -50,7 +51,6 @@ export default function MobileMenu() {
       b1 = b1Ref.current!,
       b2 = b2Ref.current!,
       btn = btnRef.current!,
-      label = labelRef.current!,
       list = listRef.current!;
     const lis = liRefs.current.map((el) => ({ el: el!, s: S(0, 260, 22) }));
     const W = S(PILL_W, 320, 26),
@@ -83,16 +83,15 @@ export default function MobileMenu() {
         menu.style.width = W.x.toFixed(2) + 'px';
         menu.style.height = H.x.toFixed(2) + 'px';
         menu.style.borderRadius = (20 + 2 * clamp(X.x, 0, 1)).toFixed(2) + 'px';
-        // closed: icon centred in the 40px button (8px + 12px half icon);
+        // closed: 8px right inset in the pill;
         // open: the example's header padding, 14px on the right
         const o = clamp(X.x, 0, 1);
         btn.style.paddingRight = (8 + 6 * o).toFixed(2) + 'px';
-        // the header grows to 52px, so the cross ends 26px from top and right
+        // the header grows to 52px, so the cross ends 26px from top and right;
+        // the name stays put and simply rides along with the header
         const head = HEAD + (HEAD_OPEN - HEAD) * o;
         btn.style.height = head.toFixed(2) + 'px';
         list.style.top = head.toFixed(2) + 'px';
-        label.style.opacity = o.toFixed(3);
-        label.style.transform = `translateX(${((1 - o) * -6).toFixed(2)}px)`;
         const x = clamp(X.x, -0.1, 1.1);
         // two lines 8px apart meet in the middle and turn 45 degrees each way
         b1.style.transform = `translateY(${(-4 * (1 - x)).toFixed(2)}px) rotate(${(45 * x).toFixed(2)}deg)`;
@@ -146,14 +145,13 @@ export default function MobileMenu() {
           onClick={() => setOpen((o) => !o)}
           ref={btnRef}
           // the icon is pinned to the right edge, so it rides out to the
-          // right as the panel opens; the page name fades in on the left
+          // right as the panel opens; the name stays on the left throughout
           className="group absolute inset-x-0 top-0 flex items-center justify-end text-ink focus:outline-none"
           style={{ height: HEAD, paddingRight: 8 }}
         >
           <span
-            ref={labelRef}
             aria-hidden="true"
-            className="absolute left-5 text-[15px] font-semibold tracking-[-0.01em] whitespace-nowrap opacity-0 will-change-transform"
+            className="absolute left-5 text-[15px] font-semibold tracking-[-0.01em] whitespace-nowrap"
           >
             Ziyi Zhu
           </span>

@@ -21,7 +21,7 @@ I've recorded two live streams walking through this repository and answering que
 
 ## Overview
 
-- `layouts/*` - The different page layouts each MDX category (blog, snippets) uses.
+- `layouts/*` - The different page layouts each MDX category (blog, notes) uses.
 - `lib/*` - Short for "library", a collection of helpful utilities or code for external services.
 - `pages/api/*` - [API Routes](https://nextjs.org/docs/api-routes/introduction) powering [`/dashboard`](https://leerob.io/dashboard), newsletter subscription, guestbook, and post views.
 - `pages/blog/*` - Static pre-rendered blog pages using MDX.

@@ -48,10 +48,10 @@ export default function Footer() {
             <RollText text="Guestbook" />
           </Link>
           <Link
-            href="/snippets"
+            href="/notes"
             className="roll-link text-gray-500 transition-colors"
           >
-            <RollText text="Snippets" />
+            <RollText text="Notes" />
           </Link>
         </div>
       </div>
