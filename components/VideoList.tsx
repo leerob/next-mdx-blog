@@ -225,15 +225,17 @@ export default function VideoList({ videos }: { videos: Video[] }) {
               <p className="text-[15px] font-semibold leading-5 truncate text-ink">
                 {v.title}
               </p>
-              {/* views and likes; an empty line until they load */}
+              {/* views and likes; placeholders while loading or if the
+                  stats are unavailable */}
               <p className="h-[18px] text-[13px] leading-[18px] text-muted tabular-nums">
-                {stat &&
-                  [
-                    count(stat.views, 'view'),
-                    stat.likes != null && count(stat.likes, 'like')
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
+                {stat
+                  ? [
+                      count(stat.views, 'view'),
+                      stat.likes != null && count(stat.likes, 'like')
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                  : '– views · – likes'}
               </p>
             </div>
             <span
