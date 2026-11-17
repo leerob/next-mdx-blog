@@ -22,11 +22,13 @@ const LINKS = [
   { href: 'https://portfolio.ziyizhu.com/', text: 'Portfolio' }
 ];
 
-// collapsed: a pill with the name and the toggle, as in the original
-// (20px inset + ~58px name + 12px gap + 24px icon + 8px inset)
-const PILL_W = 122,
-  HEAD = 40, // closed: same height as the theme toggle
-  HEAD_OPEN = 52, // open: the example's header height,
+// The original's measurements: closed it is a 150 × 52 pill (radius 26) with
+// the name inset 20px on the left and the 24px toggle 14px from the right;
+// the header stays 52px tall when open.
+const PILL_W = 150,
+  HEAD = 52,
+  HEAD_OPEN = 52,
+  PAD_R = 14,
   ROW = 48;
 
 // Dynamic Menu (designbookmark.com/motion#db-dynamic-menu): a pill with the
@@ -82,13 +84,10 @@ export default function MobileMenu() {
       render() {
         menu.style.width = W.x.toFixed(2) + 'px';
         menu.style.height = H.x.toFixed(2) + 'px';
-        menu.style.borderRadius = (20 + 2 * clamp(X.x, 0, 1)).toFixed(2) + 'px';
-        // closed: 8px right inset in the pill;
-        // open: the example's header padding, 14px on the right
+        // a full pill (radius 26) when closed, a rounded panel (22) when open
         const o = clamp(X.x, 0, 1);
-        btn.style.paddingRight = (8 + 6 * o).toFixed(2) + 'px';
-        // the header grows to 52px, so the cross ends 26px from top and right;
-        // the name stays put and simply rides along with the header
+        menu.style.borderRadius = (HEAD / 2 - 4 * o).toFixed(2) + 'px';
+        // the header keeps its height, so the name and toggle stay put
         const head = HEAD + (HEAD_OPEN - HEAD) * o;
         btn.style.height = head.toFixed(2) + 'px';
         list.style.top = head.toFixed(2) + 'px';
@@ -135,7 +134,7 @@ export default function MobileMenu() {
       <div
         ref={menuRef}
         className="surface absolute left-0 top-0 z-50 overflow-hidden shadow-[0_24px_48px_-24px_rgba(0,0,0,0.35)]"
-        style={{ width: PILL_W, height: HEAD, borderRadius: 20 }}
+        style={{ width: PILL_W, height: HEAD, borderRadius: HEAD / 2 }}
       >
         <button
           type="button"
@@ -144,10 +143,10 @@ export default function MobileMenu() {
           aria-label="Toggle menu"
           onClick={() => setOpen((o) => !o)}
           ref={btnRef}
-          // the icon is pinned to the right edge, so it rides out to the
-          // right as the panel opens; the name stays on the left throughout
+          // the name is inset 20px on the left and the toggle 14px on the
+          // right; the toggle rides out to the right as the panel opens
           className="group absolute inset-x-0 top-0 flex items-center justify-end text-ink focus:outline-none"
-          style={{ height: HEAD, paddingRight: 8 }}
+          style={{ height: HEAD, paddingRight: PAD_R }}
         >
           <span
             aria-hidden="true"

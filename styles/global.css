@@ -267,11 +267,15 @@ input[type='email'] {
   font-weight: inherit;
 }
 
+/* Tables scroll sideways only when they must. Cell text wraps (formulas
+   don't, KaTeX keeps them whole), and position: relative makes the table the
+   containing block for KaTeX's absolutely positioned accessibility copy, so
+   it is clipped here instead of stretching the page on phones. */
 table {
   display: block;
+  position: relative;
   max-width: fit-content;
   overflow-x: auto;
-  white-space: nowrap;
 }
 
 /* Callout: the same borderless fill and radius as code blocks, with the
@@ -390,6 +394,7 @@ table {
 
 /* KaTeX Math Formula Styles */
 .katex-display {
+  position: relative; /* clip KaTeX's hidden copy too (see table) */
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
