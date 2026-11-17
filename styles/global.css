@@ -157,15 +157,10 @@ html {
   @apply visible;
 }
 
-.prose img {
-  /* Don't apply styles to next/image */
+/* next/image components manage their own layout; markdown images keep the
+   typography plugin's spacing */
+.prose img[data-nimg] {
   @apply m-0;
-}
-
-.prose > :first-child {
-  /* Override removing top margin, causing layout shift */
-  margin-top: 1.25em !important;
-  margin-bottom: 1.25em !important;
 }
 
 .token.comment,
@@ -228,15 +223,6 @@ pre[class*='language-'] {
   @apply text-ink;
 }
 
-pre::-webkit-scrollbar {
-  display: none;
-}
-
-pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
 .rehype-code-title {
   @apply px-5 py-3 font-mono text-sm font-semibold text-ink-2 bg-fill-2 rounded-t-2xl;
 }
@@ -244,10 +230,6 @@ pre {
 .rehype-code-title + pre,
 .rehype-code-title + .code-block > pre {
   @apply mt-0 rounded-t-none;
-}
-
-.highlight-line {
-  @apply block px-4 -mx-4 bg-gray-100 border-l-4 border-blue-500 dark:bg-gray-800;
 }
 
 /* Remove Safari input shadow on mobile */
@@ -399,10 +381,6 @@ table {
   overflow-y: hidden;
   max-width: 100%;
   padding: 0.5rem 0;
-}
-
-.katex {
-  font-size: 1em;
 }
 
 .katex-display > .katex {
