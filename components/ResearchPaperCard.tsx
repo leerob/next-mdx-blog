@@ -3,6 +3,7 @@ import useSWR from 'swr';
 import cn from 'classnames';
 
 import fetcher from 'lib/fetcher';
+import { mesh } from 'lib/mesh';
 import { S, step, clamp, atRest, register, kick } from 'lib/spring';
 
 // The example's own defaults (--ticket-tilt, --ticket-depth, --ticket-flip)
@@ -18,7 +19,7 @@ type Paper = {
   href: string;
   pdf: string;
   arxivId: string; // for the citation count
-  gradient: string;
+  hue: number; // colour of the grainy mesh on the front
 };
 
 // .layer in the original (the sides are .ticket-side in global.css)
@@ -26,22 +27,13 @@ const layer = 'absolute will-change-transform pointer-events-none';
 
 // Parallax Ticket (designbookmark.com/motion#db-parallax-ticket): the card
 // tilts toward the cursor and each layer moves by its own depth, so the
-// gradient and the title separate in space, while a glare follows the
+// mesh and the title separate in space, while a glare follows the
 // cursor. Click flips it on a spring that overshoots a little, showing the
 // paper's details and links on the back. Untouched, it floats gently so the
 // depth is visible without a cursor (only while it is on screen).
 export default function ResearchPaperCard(paper: Paper) {
-  const {
-    title,
-    venue,
-    authors,
-    pages,
-    anthologyId,
-    href,
-    pdf,
-    arxivId,
-    gradient
-  } = paper;
+  const { title, venue, authors, pages, anthologyId, href, pdf, arxivId, hue } =
+    paper;
   const { data } = useSWR<Record<string, number | null>>(
     '/api/citations',
     fetcher
@@ -203,7 +195,8 @@ export default function ResearchPaperCard(paper: Paper) {
         >
           <div
             data-depth="0.25"
-            className={cn(layer, '-inset-5 bg-gradient-to-br', gradient)}
+            className={cn(layer, '-inset-5')}
+            style={mesh(hue, { shade: false })}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/45" />
           <div data-depth="0.9" className={cn(layer, 'inset-0')}>

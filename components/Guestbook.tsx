@@ -4,6 +4,7 @@ import { signIn, useSession } from 'next-auth/react';
 import useSWR, { useSWRConfig } from 'swr';
 
 import fetcher from 'lib/fetcher';
+import { mesh, hueFor } from 'lib/mesh';
 import {
   Form,
   FormState,
@@ -11,13 +12,6 @@ import {
   GUESTBOOK_MAX_LENGTH
 } from 'lib/types';
 import PromptBox from 'components/PromptBox';
-
-// The examples' grainy mesh avatars: twelve colour families, picked by name.
-function avatarFamily(name: string) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
-  return (Math.abs(h) % 12) + 1;
-}
 
 function GuestbookEntryItem({
   entry,
@@ -43,7 +37,8 @@ function GuestbookEntryItem({
     <div className="flex gap-3">
       <span
         aria-hidden="true"
-        data-av={avatarFamily(name)}
+        // the site's grainy mesh, its own hue for each name
+        style={mesh(hueFor(name))}
         className="flex-none grid place-items-center w-9 h-9 rounded-full text-sm font-semibold text-white"
       >
         {name.charAt(0).toUpperCase()}
