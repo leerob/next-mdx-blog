@@ -36,7 +36,7 @@ export default function Home() {
                 src="/avatar.jpg"
                 sizes="30vw"
                 priority
-                className="rounded-full filter"
+                className="rounded-[22%] filter"
               />
             </div>
           </div>

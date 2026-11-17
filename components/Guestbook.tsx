@@ -37,9 +37,10 @@ function GuestbookEntryItem({
     <div className="flex gap-3">
       <span
         aria-hidden="true"
-        // the site's grainy mesh, its own hue for each name
+        // the site's grainy mesh, its own hue for each name; 40px, with its top
+        // level with the top of the name's capitals (6px into the line box)
         style={mesh(hueFor(name))}
-        className="flex-none grid place-items-center w-9 h-9 rounded-full text-sm font-semibold text-white"
+        className="flex-none grid place-items-center w-10 h-10 mt-1.5 rounded-[22%] text-base font-semibold text-white"
       >
         {name.charAt(0).toUpperCase()}
       </span>
