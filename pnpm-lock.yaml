@@ -141,6 +141,9 @@ importers:
       rss:
         specifier: ^1.2.2
         version: 1.2.2
+      sharp:
+        specifier: 0.33.5
+        version: 0.33.5
       typescript:
         specifier: ^5.6.3
         version: 5.9.2
@@ -9984,7 +9987,6 @@ snapshots:
     dependencies:
       color-name: 1.1.4
       simple-swizzle: 0.2.4
-    optional: true
 
   color2k@2.0.3: {}
 
@@ -9992,7 +9994,6 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
       color-string: 1.9.1
-    optional: true
 
   colorette@2.0.20: {}
 
@@ -10261,8 +10262,7 @@ snapshots:
 
   dequal@2.0.3: {}
 
-  detect-libc@2.1.1:
-    optional: true
+  detect-libc@2.1.1: {}
 
   detect-node-es@1.1.0: {}
 
@@ -11523,8 +11523,7 @@ snapshots:
 
   is-arrayish@0.2.1: {}
 
-  is-arrayish@0.3.4:
-    optional: true
+  is-arrayish@0.3.4: {}
 
   is-async-function@2.1.1:
     dependencies:
@@ -13963,7 +13962,6 @@ snapshots:
       '@img/sharp-wasm32': 0.33.5
       '@img/sharp-win32-ia32': 0.33.5
       '@img/sharp-win32-x64': 0.33.5
-    optional: true
 
   shebang-command@2.0.0:
     dependencies:
@@ -14006,7 +14004,6 @@ snapshots:
   simple-swizzle@0.2.4:
     dependencies:
       is-arrayish: 0.3.4
-    optional: true
 
   simple-wcswidth@1.1.2: {}
 
