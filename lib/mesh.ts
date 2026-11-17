@@ -2,7 +2,8 @@ import type { CSSProperties } from 'react';
 
 // The site's grainy mesh, from the motion studies: a base colour with three
 // soft blobs (light, pale, deep) and film grain blended over the top. One hue
-// sets every colour, so a name or a card only needs a single number.
+// sets every colour, so a name only needs a single number (the guestbook
+// avatars).
 
 // FNV-1a: a small, stable 32-bit string hash.
 function hash(seed: string) {
@@ -22,20 +23,17 @@ export function hueFor(seed: string) {
 const GRAIN =
   "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")";
 
-// the paper cards' shade: darker toward the bottom, so white text stays legible
+// darker toward the bottom, so white text stays legible
 const SHADE =
   'linear-gradient(to bottom, transparent, rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.45))';
 
-/**
- * Background for a hue. Pass `shade: false` when the element already has its
- * own shade layer (the paper cards draw it separately).
- */
-export function mesh(hue: number, { shade = true } = {}): CSSProperties {
+/** Background for a hue. */
+export function mesh(hue: number): CSSProperties {
   const c = (dh: number, s: number, l: number) =>
     `hsl(${(hue + dh + 360) % 360} ${s}% ${l}%)`;
   const layers = [
     GRAIN,
-    ...(shade ? [SHADE] : []),
+    SHADE,
     `radial-gradient(70% 70% at 12% 10%, ${c(15, 100, 76)} 0, transparent 70%)`, // light
     `radial-gradient(60% 60% at 92% 8%, ${c(5, 100, 90)} 0, transparent 70%)`, // pale
     `radial-gradient(75% 75% at 88% 96%, ${c(-50, 85, 50)} 0, transparent 72%)` // deep
