@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Container from '../components/Container';
 import BlogPostCard from '../components/BlogPostCard';
 import ResearchPaperCard from '../components/ResearchPaperCard';
-import Subscribe from '../components/Subscribe';
 import VideoList from '../components/VideoList';
 import RollText from '../components/RollText';
 
@@ -152,8 +151,14 @@ export default function Home() {
             Music and art are the guiding lights of the world. This channel
             features some of my acoustic guitar cover of popular songs.
           </p>
+          {/* newest first, by publish date */}
           <VideoList
             videos={[
+              {
+                href: 'https://youtu.be/ALa2q5i_G30',
+                length: '05:38',
+                title: '宇多田ヒカル Utada Hikaru - First Love'
+              },
               {
                 href: 'https://youtu.be/JqTIkdMLcHw',
                 length: '02:39',
@@ -165,19 +170,20 @@ export default function Home() {
                 title: '아이유 IU - Through The Night'
               },
               {
-                href: 'https://youtu.be/CgwppQEoTkk',
-                length: '04:46',
-                title: '松井佑贵 Yuki Matsui - Sunny Day'
-              },
-              {
                 href: 'https://youtu.be/3Tr_-s0pZjs',
                 length: '03:03',
                 title: 'Secret Base ～君がくれたもの～'
               },
               {
-                href: 'https://youtu.be/z2txWTlBmTQ',
-                length: '05:18',
-                title: '松井佑贵 Yuki Matsui - Rider'
+                href: 'https://youtu.be/hhS-thBlBbw',
+                length: '03:22',
+                title: 'Aimer - Kataomoi'
+              },
+              {
+                href: 'https://youtu.be/NlaUZfxdoEQ',
+                length: '04:41',
+                title: 'DEPAPEPE - ONE',
+                duet: true
               }
             ]}
           />

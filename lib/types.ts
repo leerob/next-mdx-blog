@@ -33,10 +33,6 @@ export type FormState = {
   message?: string;
 };
 
-export type Subscribers = {
-  count: number;
-};
-
 export type Views = {
   total: number;
 };
@@ -63,6 +59,11 @@ export type TopTracks = {
 export type YouTube = {
   subscriberCount: number;
   viewCount: number;
+};
+
+export type VideoStats = {
+  views: number;
+  likes: number | null;
 };
 
 export type GitHub = {
