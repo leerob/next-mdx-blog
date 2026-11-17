@@ -23,7 +23,7 @@ const LINKS = [
 ];
 
 // The original's measurements: closed it is a 150 × 52 pill (radius 26) with
-// the name inset 20px on the left and the 24px toggle 14px from the right;
+// the ZZ logo inset 20px on the left and the 24px toggle 14px from the right;
 // the header stays 52px tall when open.
 const PILL_W = 150,
   HEAD = 52,
@@ -43,6 +43,7 @@ export default function MobileMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
   const b1Ref = useRef<HTMLElement>(null);
   const b2Ref = useRef<HTMLElement>(null);
+  const z2Ref = useRef<HTMLSpanElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const liRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -52,6 +53,7 @@ export default function MobileMenu() {
     const menu = menuRef.current!,
       b1 = b1Ref.current!,
       b2 = b2Ref.current!,
+      z2 = z2Ref.current!,
       btn = btnRef.current!,
       list = listRef.current!;
     const lis = liRefs.current.map((el) => ({ el: el!, s: S(0, 260, 22) }));
@@ -87,6 +89,9 @@ export default function MobileMenu() {
         // a full pill (radius 26) when closed, a rounded panel (22) when open
         const o = clamp(X.x, 0, 1);
         menu.style.borderRadius = (HEAD / 2 - 4 * o).toFixed(2) + 'px';
+        // the left Z stays put and the right one slides out by 0.7rem, the
+        // same total gap the portfolio's hover opens between them
+        z2.style.transform = `translate(${(11.2 * o).toFixed(2)}px, -50%)`;
         // the header keeps its height, so the name and toggle stay put
         const head = HEAD + (HEAD_OPEN - HEAD) * o;
         btn.style.height = head.toFixed(2) + 'px';
@@ -143,16 +148,23 @@ export default function MobileMenu() {
           aria-label="Toggle menu"
           onClick={() => setOpen((o) => !o)}
           ref={btnRef}
-          // the name is inset 20px on the left and the toggle 14px on the
+          // the logo is inset 20px on the left and the toggle 14px on the
           // right; the toggle rides out to the right as the panel opens
           className="group absolute inset-x-0 top-0 flex items-center justify-end text-ink focus:outline-none"
           style={{ height: HEAD, paddingRight: PAD_R }}
         >
+          {/* ZZ monogram from portfolio.ziyizhu.com: the two Zs overlap into
+              one mark when closed; the right Z slides out as the menu opens */}
           <span
             aria-hidden="true"
-            className="absolute left-5 text-[15px] font-semibold tracking-[-0.01em] whitespace-nowrap"
+            className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-6"
           >
-            Ziyi Zhu
+            <span className="zz-letter" style={{ left: 0 }}>
+              Z
+            </span>
+            <span ref={z2Ref} className="zz-letter" style={{ left: '0.8rem' }}>
+              Z
+            </span>
           </span>
           <span className="relative flex-none w-6 h-6 rounded-full group-focus-visible:ring-2 group-focus-visible:ring-[color:var(--fill-3)] group-focus-visible:ring-offset-4 group-focus-visible:ring-offset-[color:var(--surface)]">
             <i

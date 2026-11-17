@@ -860,6 +860,25 @@ table {
 }
 
 /* Dynamic Menu toggle lines */
+/* ZZ monogram, as on portfolio.ziyizhu.com: two bold serif Zs, the second
+   offset by 0.8rem so they overlap; MobileMenu slides the right one out */
+.zz-letter {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  transform: translate(0, -50%);
+  will-change: transform;
+}
+
 .dyn-line {
   @apply absolute rounded-sm will-change-transform;
   left: 3px;
