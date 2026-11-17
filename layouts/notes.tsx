@@ -36,7 +36,7 @@ export default function NoteLayout({
             />
           </div>
         </div>
-        <div className="prose w-full">{children}</div>
+        <div className="prose w-full max-w-none">{children}</div>
       </article>
     </Container>
   );
