@@ -36,7 +36,7 @@ export default function Home() {
                 src="/avatar.jpg"
                 sizes="30vw"
                 priority
-                className="rounded-full filter"
+                className="rounded-[22%] filter"
               />
             </div>
           </div>
@@ -59,7 +59,7 @@ export default function Home() {
               href="https://aclanthology.org/2026.emnlp-main.197/"
               pdf="https://aclanthology.org/2026.emnlp-main.197.pdf"
               arxivId="2603.01865"
-              gradient="from-[#FDE68A] via-[#FCA5A5] to-[#FECACA]"
+              hue={350}
             />
             <ResearchPaperCard
               title="DIAL: Direct Iterative Adversarial Learning for Realistic Multi-Turn Dialogue Simulation"
@@ -79,7 +79,7 @@ export default function Home() {
               href="https://aclanthology.org/2026.findings-emnlp.46/"
               pdf="https://aclanthology.org/2026.findings-emnlp.46.pdf"
               arxivId="2512.20773"
-              gradient="from-[#6EE7B7] via-[#3B82F6] to-[#9333EA]"
+              hue={220}
             />
           </div>
           <a

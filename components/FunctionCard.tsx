@@ -17,12 +17,12 @@ export default function FunctionCard({
     >
       <Image
         alt={title}
-        height={32}
-        width={32}
+        height={40}
+        width={40}
         src={urlForImage(logo).url()}
-        className="rounded-full"
+        className="rounded-[22%]"
       />
-      <h3 className="mt-3 text-lg font-semibold leading-snug tracking-tight text-ink">
+      <h3 className="mt-4 text-lg font-semibold leading-snug tracking-tight text-ink">
         {title}
       </h3>
       <p className="mt-1 text-sm text-muted">{description}</p>
