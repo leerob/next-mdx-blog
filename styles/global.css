@@ -55,10 +55,10 @@
 /* Pull cord: the invisible button that sits on the bead and follows it */
 .cord-grab {
   position: absolute;
-  left: -22px;
-  top: -12px;
-  width: 44px;
-  height: 52px;
+  left: -24px;
+  top: -4px;
+  width: 48px;
+  height: 48px;
   border: 0;
   border-radius: 12px;
   background: transparent;

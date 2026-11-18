@@ -9,7 +9,11 @@ import { S, step, atRest, register, after, cancel, kick } from 'lib/spring';
 // assumed, so the cord still reaches the top when the nav's height changes
 // (the mobile menu is taller than the slot, for one).
 const BOX = 40,
-  REST = 0, // where the bead hangs from: its cap at the slot's top, the bulb mid-slot
+  // the bead: the classic bulb icon (drawn 682 units tall, see below),
+  // hung tip up and exactly as tall as the slot, so it fills it like a button
+  BULB = (418 * BOX) / 682, // its width, about 24.5px
+  GLOBE = (473.5 * BOX) / 682, // the globe's centre, below the top
+  REST = 0, // where the bead hangs from: the slot's top
   TOP0 = 32, // the nav's top padding: the first guess, before measuring
   N = 8, // links in the cord
   CLICK = 22, // stretch that flips the switch (the original's)
@@ -33,47 +37,55 @@ export default function ThemeCord() {
   const light = resolvedTheme === 'light';
 
   useEffect(() => setMounted(true), []);
-  // flip the theme, revealing the new one in a circle that grows from the
-  // bead (View Transitions); instant where unsupported or motion is reduced
+  // Flip the theme, revealing the new one in a circle that grows from the
+  // bulb (View Transitions); instant where unsupported or motion is reduced.
   toggleRef.current = () => {
-    const next = light ? 'dark' : 'light';
+    const root = document.documentElement;
     const apply = () => {
-      // set the class here so the change lands inside the transition
-      document.documentElement.classList.toggle('dark', next === 'dark');
+      // read the theme when the change lands, not when the pull started, so
+      // two quick pulls flip it twice; set the class here so the change is
+      // inside the transition's snapshot
+      const next = root.classList.contains('dark') ? 'light' : 'dark';
+      root.classList.toggle('dark', next === 'dark');
       setTheme(next);
     };
     const doc = document as Document & {
-      startViewTransition?: (update: () => void) => { ready: Promise<void> };
+      startViewTransition?: (update: () => void) => {
+        ready: Promise<void>;
+      };
     };
     if (
       !doc.startViewTransition ||
       matchMedia('(prefers-reduced-motion: reduce)').matches
     )
       return apply();
-    // centred on the bulb at rest (a pull has it stretched down right now):
-    // the slot's middle, the bulb's centre 20px below where it hangs from
+    // centred on the bulb at rest, not where a pull has stretched it to
     const slot = beadRef.current!.parentElement!.getBoundingClientRect();
     const x = slot.left + BOX / 2,
-      y = slot.top + REST + 20;
+      y = slot.top + REST + GLOBE;
     const r = Math.hypot(
       Math.max(x, innerWidth - x),
       Math.max(y, innerHeight - y)
     );
-    doc.startViewTransition(apply).ready.then(() =>
-      document.documentElement.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${r}px at ${x}px ${y}px)`
-          ]
-        },
-        {
-          duration: 1000,
-          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-          pseudoElement: '::view-transition-new(root)'
-        }
+    doc
+      .startViewTransition(apply)
+      .ready.then(() =>
+        root.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${r}px at ${x}px ${y}px)`
+            ]
+          },
+          {
+            duration: 1000,
+            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            pseudoElement: '::view-transition-new(root)'
+          }
+        )
       )
-    );
+      // a newer pull skips this transition; its theme change still applies
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -346,39 +358,42 @@ export default function ThemeCord() {
           strokeLinejoin="round"
         />
       </svg>
-      {/* the bead, in the demo's lamp colours: a grey cap and a bulb that is
-          lit (yellow, with a sun) in light mode and dim (with a moon) in dark */}
+      {/* the bead, in the demo's lamp colours: a grey screw base and a classic
+          bulb, lit (yellow) in light mode and dim in dark */}
       <i
         ref={beadRef}
         aria-hidden="true"
-        className="absolute left-[-14px] top-0 flex flex-col items-center w-7 will-change-transform"
+        className="absolute top-0 will-change-transform"
         style={{
-          transformOrigin: '14px 0',
+          left: -BULB / 2,
+          width: BULB,
+          transformOrigin: `${BULB / 2}px 0`,
           transform: `translate(${BOX / 2}px,${REST}px)`
         }}
       >
-        <span className="w-[9px] h-[7px] -mb-px rounded-[2px] bg-[color:var(--muted-2)]" />
-        <span className="grid place-items-center w-7 h-7 rounded-full bg-[#ffd23f] text-[#3a2a00] dark:bg-white/[.14] dark:text-gray-200 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-          {mounted && (
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.4}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-4 h-4"
-            >
-              <path
-                d={
-                  light
-                    ? 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z'
-                    : 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'
-                }
-              />
-            </svg>
-          )}
-        </span>
+        <svg
+          viewBox="-209 0 418 682"
+          width={BULB}
+          height={BOX}
+          className="block overflow-visible"
+        >
+          {/* the screw base, tip up: a domed contact and three threads,
+              widening toward the neck: threads and gaps all even (34 and
+              17, about 2px and 1px) */}
+          <g className="fill-[color:var(--muted-2)]">
+            <path d="M-54 40A54 40 0 0 1 54 40Z" />
+            <rect x={-91.5} y={57} width={183} height={34} rx={17} />
+            <rect x={-100} y={108} width={200} height={34} rx={17} />
+            <rect x={-105} y={159} width={210} height={34} rx={17} />
+          </g>
+          {/* the glass: a 217-wide neck, rounded at the base, flaring
+              through a fillet of 88 into a globe of radius 208.5 */}
+          <path
+            vectorEffect="non-scaling-stroke"
+            className="fill-[#ffd23f] dark:fill-white/[.14] dark:stroke-white/[.12]"
+            d="M-96.5 210A12 12 0 0 0 -108.5 222V251.5A88 88 0 0 1 -138.18 317.39A208.5 208.5 0 1 0 138.18 317.39A88 88 0 0 1 108.5 251.5V222A12 12 0 0 0 96.5 210Z"
+          />
+        </svg>
       </i>
       {/* the one real control: it sits on the bead and follows it */}
       <button
