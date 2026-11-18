@@ -19,7 +19,9 @@ import {
 type Video = { href: string; title: string; length: string; duet?: boolean };
 
 const ROW = 72,
-  GAP = 8,
+  // between the rows: more than a plain list's 8, so each row reads as its
+  // own card, less than the 16 between the home page's larger cards
+  GAP = 12,
   THUMB = 48;
 
 const videoId = (href: string) => href.split('/').pop()!.split('?')[0];
@@ -175,9 +177,20 @@ export default function VideoList({ videos }: { videos: Video[] }) {
   useEffect(() => {
     showRef.current(open);
     if (open < 0) return;
+    // Close on Escape, or on a click anywhere outside the open card (a click
+    // on the card itself toggles it closed, and its YouTube link only opens
+    // the video). A click, not pointerdown, so scrolling past on a phone
+    // leaves it open.
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(-1);
+    const outside = (e: MouseEvent) => {
+      if (!rowRefs.current[open]?.contains(e.target as Node)) setOpen(-1);
+    };
     document.addEventListener('keydown', esc);
-    return () => document.removeEventListener('keydown', esc);
+    document.addEventListener('click', outside);
+    return () => {
+      document.removeEventListener('keydown', esc);
+      document.removeEventListener('click', outside);
+    };
   }, [open]);
 
   return (
