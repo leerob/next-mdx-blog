@@ -118,9 +118,8 @@ export default function ResearchPaperCard(paper: Paper) {
         const ry = RY.x + F.x;
         card.style.transform = `rotateX(${RX.x.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg) scale(${LIFT.x.toFixed(4)})`;
         // Show only the face turned toward the viewer. backface-visibility
-        // alone is not enough: iOS Safari ignores it in some paths (the
-        // snapshot a theme change's view transition takes, for one) and
-        // draws the back face mirrored over the front.
+        // alone is not enough: iOS Safari ignores it in some compositing
+        // paths and draws the back face mirrored over the front.
         const front = Math.cos((ry * Math.PI) / 180) >= 0;
         faces[0].style.visibility = front ? 'visible' : 'hidden';
         faces[1].style.visibility = front ? 'hidden' : 'visible';

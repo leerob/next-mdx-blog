@@ -1,27 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
 
-import {
-  S,
-  step,
-  tune,
-  atRest,
-  register,
-  after,
-  cancel,
-  kick
-} from 'lib/spring';
+import { S, step, atRest, register, after, cancel, kick } from 'lib/spring';
 
 // The slot it hangs in: the same 40px square as the other nav buttons. The
 // cord is the demo's: twelve 9px links, 108px in all, hung from above the
-// top of the page so the bead rests in the slot; the long cord is what makes
-// it swing as wide as the demo's.
+// top of the page so the bead rests at the slot's top; the long cord is what
+// makes it swing as wide as the demo's.
 const BOX = 40,
-  // the bead: the classic bulb icon (drawn 682 units tall, see below),
-  // hung tip up and exactly as tall as the slot, so it fills it like a button
+  // the bead: the classic bulb icon (drawn 682 units tall, see below), hung
+  // tip up and exactly as tall as the slot, so it fills it like a button
   BULB = (418 * BOX) / 682, // its width, about 24.5px
-  GLOBE = (473.5 * BOX) / 682, // the globe's centre, below the top
-  REST = 0, // where the bead hangs from: the slot's top
   N = 12, // links in the cord
   L = 108, // its length (9px a link)
   CLICK = 22, // stretch that flips the switch (the original's)
@@ -29,10 +18,6 @@ const BOX = 40,
   TICK = 1 / 240; // the rope's fixed step (see tick)
 
 type P = { x: number; y: number; vx: number; vy: number };
-
-let transitions = 0;
-
-type ViewTransition = { ready: Promise<void>; finished: Promise<void> };
 
 // Pull Cord (designbookmark.com/motion#db-pull-cord), the cord without the
 // lamp. The cord is a chain of points with weight, kept at length by soft
@@ -43,20 +28,19 @@ type ViewTransition = { ready: Promise<void>; finished: Promise<void> };
 export default function ThemeCord() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
-  const beadRefs = useRef<(HTMLElement | null)[]>([]);
+  const pathRef = useRef<SVGPathElement>(null);
+  const beadRef = useRef<HTMLElement>(null);
   const grabRef = useRef<HTMLButtonElement>(null);
-  const setThemeRef = useRef(setTheme);
-  setThemeRef.current = setTheme;
-  const light = resolvedTheme === 'light';
+  const toggleRef = useRef<() => void>(() => {});
 
   useEffect(() => setMounted(true), []);
+  // the plain switch: the theme changes at once
+  toggleRef.current = () =>
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
 
   useEffect(() => {
-    // copies: React empties the ref arrays when the page changes, which can
-    // be a frame before this effect is cleaned up
-    const paths = [...pathRefs.current] as SVGPathElement[],
-      beads = [...beadRefs.current] as HTMLElement[],
+    const path = pathRef.current!,
+      bead = beadRef.current!,
       grab = grabRef.current!;
     const HX = S(0, 210, 22),
       HY = S(0, 210, 22); // the hand that pulls on a tap
@@ -64,7 +48,7 @@ export default function ThemeCord() {
     // where the cord hangs from: its length above the bead's rest, which is
     // off the top of the page
     const ax = BOX / 2,
-      ay = REST - L,
+      ay = -L,
       SEG = L / N;
     const pts: P[] = Array.from({ length: N + 1 }, (_, i) => ({
       x: ax,
@@ -85,14 +69,12 @@ export default function ThemeCord() {
     } | null = null;
     let ghost = false,
       armed = true,
-      stretch = 0,
       side = 1,
       acc = 0, // time not yet stepped (see tick)
       asleep = false,
       calm = 0, // how long it has been still
       moved = true; // stepped since it was last drawn
-    // its timers, all cancelled when it goes (a pull that lands after the
-    // page has changed must not start a theme change nobody can finish)
+    // its timers, all cancelled when it goes
     const timers = new Set<ReturnType<typeof after>>();
     const later = (sec: number, fn: () => void) => {
       const t = after(sec, () => {
@@ -102,144 +84,7 @@ export default function ThemeCord() {
       timers.add(t);
     };
 
-    // The light, as in the demo: a spring from 0 (off) to 1 (on), (120, 21)
-    // to turn on and (170, 27) to turn off. It sizes a circle around the
-    // bulb, wherever the bulb has swung to, that is the light page: it grows
-    // over the dark page or shrinks back into the bulb. The page is drawn
-    // twice by a View Transition (old and new) and the cord stays live above
-    // both, once in each theme, the light copy cut to the same circle.
-    const root = document.documentElement;
-    const C = S(root.classList.contains('dark') ? 0 : 1, 120, 21);
-    // the transition's clip animations, rewritten every frame while the light
-    // moves (live) and cancelled once the transition is over: finished, they
-    // still hold their last frame, and they target the pseudo-elements by
-    // name, so they would latch onto the next change's
-    let anims: Animation[] = [],
-      live = false,
-      gone = false;
-    let gx = ax,
-      gy = REST + GLOBE, // the globe's centre, in the slot
-      slot = { left: 0, top: 0 }, // the slot on screen, measured per change
-      cap: ReturnType<typeof setTimeout> | undefined;
-    const measure = () => {
-      slot = grab.parentElement!.getBoundingClientRect();
-    };
-
-    // the light circle, in the page's and in the cord's coordinates
-    const circles = () => {
-      const x = slot.left + gx,
-        y = slot.top + gy;
-      const w =
-        Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) +
-        24;
-      // under 4px it is gone, as in the demo
-      const r = Math.max(0, C.x) * w,
-        R = (r < 4 ? 0 : r).toFixed(1);
-      return [
-        `circle(${R}px at ${x.toFixed(1)}px ${y.toFixed(1)}px)`,
-        `circle(${R}px at ${gx.toFixed(1)}px ${gy.toFixed(1)}px)`
-      ];
-    };
-
-    // end the change on the light's final frame
-    const end = () => {
-      if (!live) return;
-      live = false;
-      anims.forEach((a) => a.finish());
-    };
-
-    function toggle() {
-      // between changes the light just follows the theme, however it was set
-      // (the system's, from another tab), so a pull starts from the truth
-      if (!live && !root.classList.contains('cord-turning')) {
-        C.x = C.t = root.classList.contains('dark') ? 0 : 1;
-        C.v = 0;
-      }
-      const apply = () => {
-        // read the theme when the change lands, so two quick pulls flip it
-        // twice; the class is set here so the change is in the new snapshot
-        const on = root.classList.contains('dark');
-        root.classList.toggle('dark', !on);
-        setThemeRef.current(on ? 'light' : 'dark');
-        C.t = on ? 1 : 0;
-        if (on) tune(C, 120, 21);
-        else tune(C, 170, 27);
-        kick();
-        return on;
-      };
-      const doc = document as Document & {
-        startViewTransition?: (update: () => void) => ViewTransition;
-      };
-      if (
-        !doc.startViewTransition ||
-        matchMedia('(prefers-reduced-motion: reduce)').matches
-      ) {
-        apply();
-        C.x = C.t;
-        C.v = 0;
-        return;
-      }
-      const id = ++transitions;
-      root.classList.add('cord-turning');
-      const t = doc.startViewTransition(() => {
-        // The circle as it is now, in CSS, so the transition's first frame
-        // is already cut right, before its animations attach. A pull in the
-        // middle of a change carries on from the circle where it was.
-        measure();
-        const [page, cord] = circles();
-        // drop the animations of the change this one cuts short
-        anims.forEach((a) => a.cancel());
-        anims = [];
-        live = false;
-        clearTimeout(cap);
-        root.style.setProperty('--cord-page', page);
-        root.style.setProperty('--cord-self', cord);
-        root.classList.toggle('cord-off', !apply());
-      });
-      t.ready
-        .then(() => {
-          if (id !== transitions || gone) return;
-          // held open until the light comes to rest (see render), and
-          // rewritten every frame to follow the bulb and the spring
-          const [page, cord] = circles();
-          const opts = { duration: 1e9, fill: 'both' as const };
-          const off = root.classList.contains('cord-off');
-          anims = [
-            root.animate(
-              { clipPath: [page, page] },
-              {
-                ...opts,
-                pseudoElement: `::view-transition-${off ? 'old' : 'new'}(root)`
-              }
-            ),
-            root.animate(
-              { clipPath: [cord, cord] },
-              { ...opts, pseudoElement: '::view-transition-new(cord-light)' }
-            )
-          ];
-          live = true;
-          kick();
-          // A backstop on the wall clock, apart from the animation loop: if
-          // the loop ever stops driving the light, the change still ends
-          // (the light settles in about a second)
-          cap = setTimeout(end, 3000);
-        })
-        // a newer pull skips this transition; its theme change still applies
-        .catch(() => {});
-      t.finished
-        .catch(() => {})
-        .then(() => {
-          if (id !== transitions) return;
-          clearTimeout(cap);
-          anims.forEach((a) => a.cancel());
-          anims = [];
-          root.classList.remove('cord-turning', 'cord-off');
-          root.style.removeProperty('--cord-page');
-          root.style.removeProperty('--cord-self');
-        });
-    }
-
-    const flip = () => later(0.14, toggle);
+    const flip = () => later(0.14, () => toggleRef.current());
     // what holds the bead: a real pointer, or the hand that pulls on a tap
     const pin = () => (held ? [held.x, held.y] : ghost ? [HX.x, HY.x] : null);
     function pull() {
@@ -333,8 +178,8 @@ export default function ThemeCord() {
 
       // the held end: free inside the cord's reach, rubber past it
       let px = 0,
-        py = 0;
-      stretch = 0;
+        py = 0,
+        stretch = 0;
       if (p) {
         const dx = p[0] - ax,
           dy = p[1] - ay,
@@ -426,7 +271,6 @@ export default function ThemeCord() {
 
     const unregister = register({
       frame(dt) {
-        step(C, dt);
         if (asleep) return;
         acc += dt;
         while (acc >= TICK) {
@@ -436,7 +280,7 @@ export default function ThemeCord() {
         }
       },
       render() {
-        if (!moved && !live) return; // asleep: nothing new to draw
+        if (!moved) return; // asleep: nothing new to draw
         moved = false;
         const b = pts[N],
           e = pts[N - 1];
@@ -445,31 +289,12 @@ export default function ThemeCord() {
           d += `Q${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)} ${((pts[i].x + pts[i + 1].x) / 2).toFixed(1)} ${((pts[i].y + pts[i + 1].y) / 2).toFixed(1)}`;
         d += `L${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
         const ang = Math.atan2(e.x - b.x, b.y - e.y);
-        paths.forEach((path) => path.setAttribute('d', d));
-        beads.forEach(
-          (bead) =>
-            (bead.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px) rotate(${ang.toFixed(4)}rad)`)
-        );
+        path.setAttribute('d', d);
+        bead.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px) rotate(${ang.toFixed(4)}rad)`;
         grab.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px)`;
-        // the light follows the globe, wherever it swings
-        gx = b.x - Math.sin(ang) * GLOBE;
-        gy = b.y + Math.cos(ang) * GLOBE;
-        if (live && anims.length === 2) {
-          const [page, cord] = circles();
-          (anims[0].effect as KeyframeEffect).setKeyframes([
-            { clipPath: page },
-            { clipPath: page }
-          ]);
-          (anims[1].effect as KeyframeEffect).setKeyframes([
-            { clipPath: cord },
-            { clipPath: cord }
-          ]);
-          // the light has settled: end the transition on its final frame
-          if (atRest(C)) end();
-        }
       },
-      // idle once the rope sleeps and no change is running
-      idle: () => asleep && !moved && !live && atRest(C)
+      // idle once the rope sleeps and has been drawn at rest
+      idle: () => asleep && !moved
     });
 
     return () => {
@@ -481,31 +306,22 @@ export default function ThemeCord() {
       grab.removeEventListener('click', click);
       timers.forEach(cancel);
       unregister();
-      // gone mid-change (the page changed): end it on its final frame, or
-      // the transition, held open for the light, would never end
-      gone = true;
-      clearTimeout(cap);
-      end();
     };
   }, []);
 
-  // The cord twice, once in each theme's colours, like the demo's two rooms:
-  // one shows at a time, and while the theme changes both show and the light
-  // one is cut to the same circle as the light page (see globals.css).
-  const copy = (theme: 'light' | 'dark', k: number) => (
-    <div className={`cord-copy cord-${theme}`} aria-hidden="true">
+  return (
+    <div className="relative" style={{ width: BOX, height: BOX }}>
       <svg
-        className="absolute left-0 top-0 overflow-visible"
+        aria-hidden="true"
+        className="absolute left-0 top-0 overflow-visible pointer-events-none"
         width={BOX}
         height={BOX}
       >
         <path
-          ref={(el) => {
-            pathRefs.current[k] = el;
-          }}
-          d={`M${BOX / 2} ${REST - L}L${BOX / 2} ${REST}`}
+          ref={pathRef}
+          d={`M${BOX / 2} ${-L}L${BOX / 2} 0`}
           fill="none"
-          stroke={theme === 'light' ? '#85847e' : '#828282'}
+          className="stroke-[#85847e] dark:stroke-[#828282]"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -514,15 +330,14 @@ export default function ThemeCord() {
       {/* the bead, in the demo's lamp colours: a grey screw base and a
           classic bulb, lit (yellow) in light mode and dim in dark */}
       <i
-        ref={(el) => {
-          beadRefs.current[k] = el;
-        }}
-        className="absolute top-0 will-change-transform"
+        ref={beadRef}
+        aria-hidden="true"
+        className="absolute top-0 pointer-events-none will-change-transform"
         style={{
           left: -BULB / 2,
           width: BULB,
           transformOrigin: `${BULB / 2}px 0`,
-          transform: `translate(${BOX / 2}px,${REST}px)`
+          transform: `translate(${BOX / 2}px,0)`
         }}
       >
         <svg
@@ -534,7 +349,7 @@ export default function ThemeCord() {
           {/* the screw base, tip up: a domed contact and three threads,
               widening toward the neck: threads and gaps all even (34 and
               17, about 2px and 1px) */}
-          <g fill={theme === 'light' ? '#85847e' : '#828282'}>
+          <g className="fill-[#85847e] dark:fill-[#828282]">
             <path d="M-54 40A54 40 0 0 1 54 40Z" />
             <rect x={-91.5} y={57} width={183} height={34} rx={17} />
             <rect x={-100} y={108} width={200} height={34} rx={17} />
@@ -544,31 +359,20 @@ export default function ThemeCord() {
               through a fillet of 88 into a globe of radius 208.5 */}
           <path
             vectorEffect="non-scaling-stroke"
-            className={
-              theme === 'light'
-                ? 'fill-[#ffd23f]'
-                : 'fill-white/[.14] stroke-white/[.12]'
-            }
+            className="fill-[#ffd23f] dark:fill-white/[.14] dark:stroke-white/[.12]"
             d="M-96.5 210A12 12 0 0 0 -108.5 222V251.5A88 88 0 0 1 -138.18 317.39A208.5 208.5 0 1 0 138.18 317.39A88 88 0 0 1 108.5 251.5V222A12 12 0 0 0 96.5 210Z"
           />
         </svg>
       </i>
-    </div>
-  );
-
-  return (
-    <div className="relative" style={{ width: BOX, height: BOX }}>
-      {copy('dark', 0)}
-      {copy('light', 1)}
       {/* the one real control: it sits on the bead and follows it */}
       <button
         ref={grabRef}
         type="button"
         role="switch"
-        aria-checked={mounted ? light : undefined}
+        aria-checked={mounted ? resolvedTheme === 'light' : undefined}
         aria-label="Light mode"
         className="cord-grab"
-        style={{ transform: `translate(${BOX / 2}px,${REST}px)` }}
+        style={{ transform: `translate(${BOX / 2}px,0)` }}
       />
     </div>
   );
