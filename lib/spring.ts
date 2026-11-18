@@ -14,24 +14,30 @@ export type MotionComponent = {
 
 type Timer = { t: number; fn: () => void };
 
-const reduceMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Reduced motion, read live (one query for every spring), so turning it on
+// in the system settings takes effect at once
+const reduced =
+  typeof window !== 'undefined'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    : null;
 
-export const S = (x: number, k = 400, c = 30): Spring => {
-  const s = { x, v: 0, t: x, k, c };
-  tune(s, k, c);
-  return s;
+export const S = (x: number, k = 400, c = 30): Spring => ({
+  x,
+  v: 0,
+  t: x,
+  k,
+  c
+});
+
+export const tune = (s: Spring, k: number, c: number) => {
+  s.k = k;
+  s.c = c;
 };
 
 // Reduced motion: critically damp every spring, so nothing overshoots.
-export const tune = (s: Spring, k: number, c: number) => {
-  s.k = k;
-  s.c = reduceMotion() ? 2 * Math.sqrt(k) : c;
-};
-
 export const step = (s: Spring, dt: number) => {
-  const a = -s.k * (s.x - s.t) - s.c * s.v;
+  const c = reduced?.matches ? 2 * Math.sqrt(s.k) : s.c;
+  const a = -s.k * (s.x - s.t) - c * s.v;
   s.v += a * dt;
   s.x += s.v * dt;
 };
@@ -53,25 +59,48 @@ const timers: Timer[] = [];
 let raf = 0;
 let last = 0;
 
+// One component's error must not stop the loop for every other one: report
+// it, drop that component (or timer) and carry on. Left to throw, the loop
+// would die with `raf` still set, so kick() would never restart it and every
+// spring on the page would stop responding until a reload.
+function guard(fn: () => void, c?: MotionComponent) {
+  try {
+    fn();
+  } catch (e) {
+    if (c) comps.delete(c);
+    (globalThis.reportError ?? console.error)(e);
+  }
+}
+
 function loop(now: number) {
-  const dt = Math.min((now - last) / 1000, 1 / 30);
+  raf = 0;
+  // the frame can start a little before the kick that asked for it
+  const dt = Math.max(0, Math.min((now - last) / 1000, 1 / 30));
   last = now;
   for (let i = timers.length - 1; i >= 0; i--) {
-    if ((timers[i].t -= dt) <= 0) timers.splice(i, 1)[0].fn();
+    if (i < timers.length && (timers[i].t -= dt) <= 0) {
+      const t = timers.splice(i, 1)[0];
+      guard(t.fn);
+    }
   }
   const sub = 4;
-  for (let k = 0; k < sub; k++) comps.forEach((c) => c.frame(dt / sub));
-  comps.forEach((c) => c.render());
+  for (let k = 0; k < sub; k++)
+    comps.forEach((c) => guard(() => c.frame(dt / sub), c));
+  comps.forEach((c) => guard(() => c.render(), c));
 
-  const busy =
-    timers.length > 0 || Array.from(comps).some((c) => !c.idle || !c.idle());
-  raf = busy ? requestAnimationFrame(loop) : 0;
+  let busy = timers.length > 0;
+  comps.forEach((c) =>
+    guard(() => {
+      busy ||= !c.idle || !c.idle();
+    }, c)
+  );
+  if (busy) kick(now);
 }
 
 // Wake the loop after changing a spring target.
-export function kick() {
+export function kick(now?: number) {
   if (raf || typeof window === 'undefined') return;
-  last = performance.now();
+  last = now ?? performance.now();
   raf = requestAnimationFrame(loop);
 }
 

@@ -1,10 +1,8 @@
-import { useState, useRef, Suspense } from 'react';
-import { format } from 'date-fns';
+import { useState, useRef } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import useSWR, { useSWRConfig } from 'swr';
 
 import fetcher from 'lib/fetcher';
-import { mesh, hueFor } from 'lib/mesh';
 import {
   Form,
   FormState,
@@ -13,33 +11,57 @@ import {
 } from 'lib/types';
 import PromptBox from 'components/PromptBox';
 
-function GuestbookEntryItem({
+const MONTHS = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ');
+
+// In UTC, so the server render and the browser agree whatever the
+// visitor's time zone: "3 Nov 2026 at 4:05 PM"
+function formatDate(date: Date) {
+  const h = date.getUTCHours(),
+    m = String(date.getUTCMinutes()).padStart(2, '0');
+  return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()} at ${h % 12 || 12}:${m} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
+// A solid colour for each name, always the same one: its hue from a small
+// string hash (FNV-1a), dark enough for the white initial
+function avatarColor(name: string) {
+  let h = 2166136261;
+  for (let i = 0; i < name.length; i++) {
+    h = Math.imul(h ^ name.charCodeAt(i), 16777619);
+  }
+  return `hsl(${(h >>> 0) % 360} 55% 45%)`;
+}
+
+function Entry({
   entry,
   user
 }: {
   entry: GuestbookEntry;
-  user?: any;
+  user?: { name?: string | null };
 }) {
   const { mutate } = useSWRConfig();
-  const deleteEntry = async (e: React.MouseEvent) => {
-    e.preventDefault();
+  const [failed, setFailed] = useState(false);
+  const name = entry.created_by || '?';
+  const date = new Date(entry.updated_at);
 
-    await fetch(`/api/guestbook/${entry.id}`, {
-      method: 'DELETE'
-    });
-
+  const remove = async () => {
+    setFailed(false);
+    try {
+      const res = await fetch(`/api/guestbook/${entry.id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error(String(res.status));
+    } catch {
+      setFailed(true);
+    }
     mutate('/api/guestbook');
   };
 
-  const name = entry.created_by || '?';
-
   return (
     <div className="flex gap-3">
+      {/* 40px, its top level with the top of the name's capitals */}
       <span
         aria-hidden="true"
-        // the site's grainy mesh, its own hue for each name; 40px, with its top
-        // level with the top of the name's capitals (6px into the line box)
-        style={mesh(hueFor(name))}
+        style={{ backgroundColor: avatarColor(name) }}
         className="flex-none grid place-items-center w-10 h-10 mt-1.5 rounded-[22%] text-base font-semibold text-white"
       >
         {name.charAt(0).toUpperCase()}
@@ -47,16 +69,24 @@ function GuestbookEntryItem({
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2 flex-wrap">
           <p className="font-semibold text-ink">{name}</p>
-          <p className="text-sm text-muted-2">
-            {format(new Date(entry.updated_at), "d MMM yyyy 'at' h:mm bb")}
-          </p>
+          <time dateTime={date.toISOString()} className="text-sm text-muted-2">
+            {formatDate(date)}
+          </time>
           {user && entry.created_by === user.name && (
-            <button
-              className="ml-auto text-xs font-medium px-2.5 py-1 rounded-full bg-fill-2 text-muted hover:text-[color:var(--red)] transition-colors"
-              onClick={deleteEntry}
-            >
-              Delete
-            </button>
+            <div className="ml-auto flex items-baseline gap-2">
+              {failed && (
+                <p role="alert" className="text-xs text-[color:var(--red)]">
+                  Could not delete, try again
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={remove}
+                className="text-xs font-medium px-2.5 py-1 rounded-full bg-fill-2 text-muted hover:text-[color:var(--red)] transition-colors"
+              >
+                Delete
+              </button>
+            </div>
           )}
         </div>
         <p className="mt-1 text-ink-2 break-words whitespace-pre-line">
@@ -79,9 +109,7 @@ export default function Guestbook({
   const { data: entries } = useSWR<GuestbookEntry[]>(
     '/api/guestbook',
     fetcher,
-    {
-      fallbackData
-    }
+    { fallbackData }
   );
 
   const leaveEntry = async (e: React.FormEvent) => {
@@ -92,15 +120,12 @@ export default function Guestbook({
 
     try {
       const res = await fetch('/api/guestbook', {
-        body: JSON.stringify({ body }),
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body })
       });
-      const { error } = await res.json();
-      if (error) throw new Error(error);
-    } catch (err) {
+      if (!res.ok) throw new Error(String(res.status));
+    } catch {
       setForm({
         state: Form.Error,
         message: 'Could not sign, try again'
@@ -108,9 +133,7 @@ export default function Guestbook({
       return;
     }
 
-    if (fieldEl.current) {
-      fieldEl.current.value = '';
-    }
+    if (fieldEl.current) fieldEl.current.value = '';
     mutate('/api/guestbook');
     setForm({
       state: Form.Success,
@@ -121,9 +144,9 @@ export default function Guestbook({
   return (
     <>
       <div className="surface w-full my-4 p-5 sm:p-6 rounded-[28px]">
-        <h5 className="text-lg font-bold tracking-tight text-ink">
+        <h2 className="text-lg font-bold tracking-tight text-ink">
           Sign the Guestbook
-        </h5>
+        </h2>
         <p className="mt-1 mb-4 text-sm text-muted">
           Share a message for a future visitor of my site.
         </p>
@@ -167,15 +190,9 @@ export default function Guestbook({
         </p>
       </div>
       <div className="mt-6 space-y-7 w-full">
-        <Suspense fallback={null}>
-          {entries?.map((entry) => (
-            <GuestbookEntryItem
-              key={entry.id}
-              entry={entry}
-              user={session?.user}
-            />
-          ))}
-        </Suspense>
+        {entries?.map((entry) => (
+          <Entry key={entry.id} entry={entry} user={session?.user} />
+        ))}
       </div>
     </>
   );

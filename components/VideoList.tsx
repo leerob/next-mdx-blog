@@ -45,6 +45,7 @@ type Row = {
   y: Spring;
   o: Spring;
   s: Spring;
+  moreH: number; // the tags row's height, measured with the width
 };
 
 // Expand Card (designbookmark.com/motion#db-expand-card): one progress spring
@@ -78,23 +79,32 @@ export default function VideoList({ videos }: { videos: Video[] }) {
       a: S(0, 260, 28),
       y: S(home(i), 300, 26),
       o: S(1, 300, 30),
-      s: S(1, 300, 26)
+      s: S(1, 300, 26),
+      moreH: 0
     }));
     const LH = S(listH, 300, 26); // the list's own height follows the open card
     let cur = -1,
-      timer = null;
+      timer = null,
+      W = 0;
+    // measured when a card opens or closes and on resize, never per frame:
+    // the frames only write, so they never force a layout
+    const measure = () => {
+      W = list.offsetWidth;
+      rows.forEach((r) => (r.moreH = r.more.offsetHeight));
+    };
 
     const imgH = (W: number) => Math.min(220, Math.round(((W - 24) * 9) / 16));
     // open, the demo's spacing: image at 12, title 12 below it, the 38px
     // title block, 12 more, then the tags row and a 16px bottom pad
-    const fullH = (r: Row, W: number) =>
-      imgH(W) + 74 + r.more.offsetHeight + 16;
+    const fullH = (r: Row, W: number) => imgH(W) + 74 + r.moreH + 16;
 
     showRef.current = (i) => {
       cur = i;
       cancel(timer);
-      const W = list.offsetWidth;
+      measure();
       rows.forEach((r, k) => {
+        // only the rows showing can be reached by keyboard or screen reader
+        r.el.inert = i >= 0 && k !== i;
         if (i < 0) {
           r.p.t = 0;
           r.a.t = 0;
@@ -133,8 +143,7 @@ export default function VideoList({ videos }: { videos: Video[] }) {
         );
       },
       render() {
-        const W = list.offsetWidth,
-          IMG = imgH(W);
+        const IMG = imgH(W);
         list.style.height = LH.x.toFixed(2) + 'px';
         rows.forEach((r) => {
           const p = r.p.x,

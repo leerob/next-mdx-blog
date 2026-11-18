@@ -6,19 +6,18 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (
-    req.query.secret !== process.env.SANITY_PREVIEW_SECRET ||
-    !req.query.slug
-  ) {
+  const secret = process.env.SANITY_PREVIEW_SECRET;
+  const { slug } = req.query;
+
+  // an unset secret must not let `?secret=` (undefined === undefined) through
+  if (!secret || req.query.secret !== secret || typeof slug !== 'string') {
     return res.status(401).json({ message: 'Invalid token' });
   }
 
-  const post = await previewClient.fetch(postBySlugQuery, {
-    slug: req.query.slug
-  });
+  const post = await previewClient.fetch(postBySlugQuery, { slug });
 
   if (!post) {
-    return res.status(401).json({ message: 'Invalid slug' });
+    return res.status(404).json({ message: 'Invalid slug' });
   }
 
   res.setPreviewData({});

@@ -52,6 +52,10 @@ export default function GhostSearch({
   const ghostRef = useRef<HTMLSpanElement>(null);
   const tabRef = useRef<HTMLSpanElement>(null);
   const api = useRef<{ input(): void; accept(): boolean; dismiss(): void }>();
+  // the latest onChange, so a new function from the parent does not rebuild
+  // the effect (and drop the suggestion) on every keystroke
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     const input = inputRef.current!,
@@ -120,7 +124,7 @@ export default function GhostSearch({
         );
         input.value += rest;
         input.setSelectionRange(input.value.length, input.value.length);
-        onChange(input.value);
+        onChangeRef.current(input.value);
         kick();
         return true;
       },
@@ -157,7 +161,7 @@ export default function GhostSearch({
       clear();
       unregister();
     };
-  }, [titles, onChange]);
+  }, [titles]);
 
   const sync = () => kick();
 
@@ -175,6 +179,8 @@ export default function GhostSearch({
           api.current?.input();
         }}
         onKeyDown={(e) => {
+          // leave keys to an IME while it composes
+          if (e.nativeEvent.isComposing) return;
           const el = e.currentTarget;
           const atEnd = el.selectionStart === el.value.length;
           if (e.key === 'Tab' || (e.key === 'ArrowRight' && atEnd)) {

@@ -7,26 +7,36 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const youtube = google.youtube({
-    version: 'v3',
-    auth: googleAuth
-  });
+  try {
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: googleAuth
+    });
 
-  const response = await youtube.channels.list({
-    id: ['UC0snS_FYHj_5y_uFmWzp2hg'],
-    part: ['statistics']
-  });
+    const response = await youtube.channels.list({
+      id: ['UC0snS_FYHj_5y_uFmWzp2hg'],
+      part: ['statistics']
+    });
 
-  const channel = response.data.items[0];
-  const { subscriberCount, viewCount } = channel.statistics;
+    const statistics = response.data.items?.[0]?.statistics;
+    if (statistics) {
+      const { subscriberCount, viewCount } = statistics;
 
-  res.setHeader(
-    'Cache-Control',
-    'public, s-maxage=1200, stale-while-revalidate=600'
-  );
+      res.setHeader(
+        'Cache-Control',
+        'public, s-maxage=1200, stale-while-revalidate=600, stale-if-error=86400'
+      );
 
-  return res.status(200).json({
-    subscriberCount,
-    viewCount
-  });
+      return res.status(200).json({
+        subscriberCount,
+        viewCount
+      });
+    }
+  } catch {
+    // auth, quota or network error: handled below like any other failure
+  }
+
+  // never cache a failure, so it can't replace the last good numbers
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(503).json({});
 }

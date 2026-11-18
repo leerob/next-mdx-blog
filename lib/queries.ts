@@ -30,7 +30,7 @@ export const postBySlugQuery = `
 }
 `;
 
-export const postUpdatedQuery = `*[_type == "post" && _id == $id].slug.current`;
+export const documentPathQuery = `*[_id == $id][0]{ _type, "slug": slug.current }`;
 
 const snippetFields = `
   _id,

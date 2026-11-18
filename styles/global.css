@@ -56,6 +56,15 @@
 :root.cord-off::view-transition-old(root) {
   z-index: 1;
 }
+/* the light page and the light cord, cut to the circle from the first frame
+   (ThemeCord sets it, then follows the bulb with an animation) */
+:root.cord-turning:not(.cord-off)::view-transition-new(root),
+:root.cord-off::view-transition-old(root) {
+  clip-path: var(--cord-page, none);
+}
+::view-transition-new(cord-light) {
+  clip-path: var(--cord-self, none);
+}
 
 /* The cord is drawn twice, once per theme, and only the current theme's
    copy shows. Through a change both show, live and above the page, the
@@ -139,7 +148,11 @@
 
 html {
   min-width: 360px;
-  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 #__next {
@@ -586,6 +599,13 @@ table {
 
 .prompt-status.fail .label {
   color: var(--red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt-status.think .mark,
+  .prompt-status.think .label {
+    animation: none;
+  }
 }
 
 @keyframes prompt-pulse {

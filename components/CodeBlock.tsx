@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   S,
@@ -23,6 +23,8 @@ function CopyButton({ getText }: { getText: () => string }) {
     w: useRef<HTMLSpanElement>(null)
   };
   const copyRef = useRef<() => void>(() => {});
+  // what the polite live region announces; the rolling label is visual only
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
     const iCopy = refs.iCopy.current!,
@@ -36,18 +38,23 @@ function CopyButton({ getText }: { getText: () => string }) {
     const widths = () => [a.offsetWidth, b.offsetWidth];
     let timer = null;
 
-    copyRef.current = () => {
+    copyRef.current = async () => {
+      // only claim "Copied" once the clipboard write has actually succeeded
       try {
-        navigator.clipboard.writeText(getText()).catch(() => {});
-      } catch (e) {}
+        await navigator.clipboard.writeText(getText());
+      } catch {
+        return;
+      }
       R.t = 1;
       I.t = 1;
       RW.t = widths()[1];
+      setStatus('Copied');
       cancel(timer);
       timer = after(1.8, () => {
         R.t = 0;
         I.t = 0;
         RW.t = widths()[0];
+        setStatus('');
       });
       kick();
     };
@@ -76,52 +83,60 @@ function CopyButton({ getText }: { getText: () => string }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <button
-      type="button"
-      aria-label="Copy code"
-      onClick={() => copyRef.current()}
-      className="absolute right-3 top-3 flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full overflow-hidden surface text-ink-2 text-xs font-medium not-prose"
-    >
-      <span className="relative w-4 h-4 flex-none">
-        <svg
-          ref={refs.iCopy}
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          className="absolute inset-0 w-4 h-4 fill-none stroke-current will-change-transform"
-          strokeWidth={1.9}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="8.5" y="8.5" width="11" height="11" rx="3" />
-          <path d="M15.5 8.5V7a2.5 2.5 0 0 0-2.5-2.5H7A2.5 2.5 0 0 0 4.5 7v6A2.5 2.5 0 0 0 7 15.5h1.5" />
-        </svg>
-        <svg
-          ref={refs.iOk}
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          className="absolute inset-0 w-4 h-4 fill-none stroke-current text-green-500 opacity-0 will-change-transform"
-          strokeWidth={2.4}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M5 12.5l4.5 4.5L19 7.5" />
-        </svg>
+    <>
+      <span className="sr-only" aria-live="polite">
+        {status}
       </span>
-      <span ref={refs.roll} className="relative block h-[18px] overflow-hidden">
-        <span
-          ref={refs.w}
-          aria-live="polite"
-          className="flex flex-col items-start will-change-transform"
-        >
-          <b className="block h-[18px] leading-[18px] font-medium whitespace-nowrap">
-            Copy
-          </b>
-          <b className="block h-[18px] leading-[18px] font-medium whitespace-nowrap text-green-600 dark:text-green-400">
-            Copied
-          </b>
+      <button
+        type="button"
+        aria-label="Copy code"
+        onClick={() => copyRef.current()}
+        className="absolute right-3 top-3 flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full overflow-hidden surface text-ink-2 text-xs font-medium not-prose"
+      >
+        <span className="relative w-4 h-4 flex-none">
+          <svg
+            ref={refs.iCopy}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="absolute inset-0 w-4 h-4 fill-none stroke-current will-change-transform"
+            strokeWidth={1.9}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="8.5" y="8.5" width="11" height="11" rx="3" />
+            <path d="M15.5 8.5V7a2.5 2.5 0 0 0-2.5-2.5H7A2.5 2.5 0 0 0 4.5 7v6A2.5 2.5 0 0 0 7 15.5h1.5" />
+          </svg>
+          <svg
+            ref={refs.iOk}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="absolute inset-0 w-4 h-4 fill-none stroke-current text-green-500 opacity-0 will-change-transform"
+            strokeWidth={2.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
         </span>
-      </span>
-    </button>
+        <span
+          ref={refs.roll}
+          className="relative block h-[18px] overflow-hidden"
+        >
+          <span
+            ref={refs.w}
+            aria-hidden="true"
+            className="flex flex-col items-start will-change-transform"
+          >
+            <b className="block h-[18px] leading-[18px] font-medium whitespace-nowrap">
+              Copy
+            </b>
+            <b className="block h-[18px] leading-[18px] font-medium whitespace-nowrap text-green-600 dark:text-green-400">
+              Copied
+            </b>
+          </span>
+        </span>
+      </button>
+    </>
   );
 }
 

@@ -5,13 +5,21 @@ export const config = {
 };
 
 export default async function handler(req: NextRequest) {
-  const res = await fetch(
-    'https://api.semanticscholar.org/graph/v1/author/2214424924?fields=paperCount,citationCount'
-  );
+  let data: { paperCount?: number; citationCount?: number } | null = null;
+  try {
+    const res = await fetch(
+      'https://api.semanticscholar.org/graph/v1/author/2214424924?fields=paperCount,citationCount'
+    );
+    if (res.ok) {
+      data = await res.json();
+    }
+  } catch {
+    // network error: handled below like any other failure
+  }
 
   // a failed lookup (usually a 429 rate limit) must not be cached, or it
   // would replace the last good counts for a day
-  if (!res.ok) {
+  if (!data) {
     return new Response(
       JSON.stringify({ paperCount: null, citationCount: null }),
       {
@@ -23,8 +31,6 @@ export default async function handler(req: NextRequest) {
       }
     );
   }
-
-  const data = await res.json();
 
   return new Response(
     JSON.stringify({

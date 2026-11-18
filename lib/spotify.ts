@@ -20,6 +20,10 @@ const getAccessToken = async () => {
     })
   });
 
+  if (!response.ok) {
+    throw new Error(`Spotify token request failed: ${response.status}`);
+  }
+
   return response.json();
 };
 

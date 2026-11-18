@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import Analytics from 'components/metrics/Analytics';
 import Container from 'components/Container';
 import GitHub from 'components/metrics/Github';

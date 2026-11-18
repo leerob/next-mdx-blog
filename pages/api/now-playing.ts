@@ -5,35 +5,42 @@ export const config = {
   runtime: 'edge'
 };
 
-export default async function handler(req: NextRequest) {
-  const response = await getNowPlaying();
+const notPlaying = () =>
+  new Response(JSON.stringify({ isPlaying: false }), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
 
-  if (response.status === 204 || response.status > 400) {
-    return new Response(JSON.stringify({ isPlaying: false }), {
-      status: 200,
-      headers: {
-        'content-type': 'application/json'
-      }
-    });
+export default async function handler(req: NextRequest) {
+  let song;
+  try {
+    const response = await getNowPlaying();
+
+    // 204: nothing is playing
+    if (response.status === 204 || !response.ok) {
+      return notPlaying();
+    }
+
+    song = await response.json();
+  } catch {
+    return notPlaying();
   }
 
-  const song = await response.json();
-
-  if (song.item === null) {
-    return new Response(JSON.stringify({ isPlaying: false }), {
-      status: 200,
-      headers: {
-        'content-type': 'application/json'
-      }
-    });
+  // e.g. an ad or a podcast episode in a state without an item
+  if (!song?.item) {
+    return notPlaying();
   }
 
   const isPlaying = song.is_playing;
   const title = song.item.name;
-  const artist = song.item.artists.map((_artist) => _artist.name).join(', ');
-  const album = song.item.album.name;
-  const albumImageUrl = song.item.album.images[0].url;
-  const songUrl = song.item.external_urls.spotify;
+  const artist = (song.item.artists ?? [])
+    .map((_artist) => _artist.name)
+    .join(', ');
+  const album = song.item.album?.name;
+  const albumImageUrl = song.item.album?.images?.[0]?.url ?? null;
+  const songUrl = song.item.external_urls?.spotify;
 
   return new Response(
     JSON.stringify({

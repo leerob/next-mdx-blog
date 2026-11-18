@@ -98,6 +98,8 @@ export default function ResearchPaperCard(paper: Paper) {
     stage.addEventListener('pointerleave', leave);
     stage.addEventListener('pointerdown', down);
     window.addEventListener('pointerup', up);
+    // a scroll that starts on the card cancels the press, with no pointerup
+    window.addEventListener('pointercancel', up);
 
     const unregister = register({
       frame(dt) {
@@ -132,7 +134,8 @@ export default function ResearchPaperCard(paper: Paper) {
         glare.style.setProperty('--gx', gx + '%');
         glare.style.setProperty('--gy', gy + '%');
       },
-      idle: () => !hover && [RX, RY, G, LIFT, F].every((s) => atRest(s))
+      // a resting pointer is idle too: each move kicks the loop again
+      idle: () => [RX, RY, G, LIFT, F].every((s) => atRest(s))
     });
 
     return () => {
@@ -140,6 +143,7 @@ export default function ResearchPaperCard(paper: Paper) {
       stage.removeEventListener('pointerleave', leave);
       stage.removeEventListener('pointerdown', down);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
       unregister();
     };
   }, []);

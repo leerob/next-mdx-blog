@@ -26,15 +26,17 @@ export default function NoteLayout({
           </div>
           {/* sized to the title's line box (36px, then 48px) and top-aligned,
               so it sits flush with the first line of the title */}
-          <div className="flex-none pl-4">
-            <Image
-              alt={snippet.title}
-              height={48}
-              width={48}
-              src={urlForImage(snippet.logo).url()}
-              className="w-9 h-9 md:w-12 md:h-12 rounded-[22%]"
-            />
-          </div>
+          {snippet.logo ? (
+            <div className="flex-none pl-4">
+              <Image
+                alt=""
+                height={48}
+                width={48}
+                src={urlForImage(snippet.logo).url()}
+                className="w-9 h-9 md:w-12 md:h-12 rounded-[22%]"
+              />
+            </div>
+          ) : null}
         </div>
         <div className="prose w-full max-w-none">{children}</div>
       </article>

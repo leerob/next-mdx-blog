@@ -6,7 +6,11 @@ export default function ConsCard({ title, cons }) {
         {cons.map((con) => (
           <div key={con} className="flex font-medium items-baseline mb-2">
             <div className="h-4 w-4 mr-2">
-              <svg className="h-4 w-4 text-red-500" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4 text-red-500"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <g
                   fill="none"
                   stroke="currentColor"
@@ -14,8 +18,8 @@ export default function ConsCard({ title, cons }) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-                  <path d="M22 4L12 14.01l-3-3" />
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M15 9l-6 6M9 9l6 6" />
                 </g>
               </svg>
             </div>

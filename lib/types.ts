@@ -67,6 +67,7 @@ export type VideoStats = {
 };
 
 export type GitHub = {
+  followers: number;
   stars: number;
 };
 

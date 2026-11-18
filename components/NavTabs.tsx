@@ -24,22 +24,28 @@ let lastPill: { l: number; r: number; o: number } | null = null;
 // pointer and returns to the current page's tab when the pointer leaves.
 export default function NavTabs() {
   const router = useRouter();
-  const active = ITEMS.findIndex((item) => item.href === router.asPath);
+  // the path alone: asPath carries any ?query or #hash on the client only
+  const path = router.asPath.split(/[?#]/)[0];
+  const active = ITEMS.findIndex((item) => item.href === path);
   const pillRef = useRef<HTMLSpanElement>(null);
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const pickRef = useRef<(i: number) => void>(() => {});
 
   useEffect(() => {
     const pill = pillRef.current;
-    const els = itemRefs.current;
+    // a copy: React empties the ref array on unmount, maybe a frame early
+    const els = [...itemRefs.current];
     if (!pill) return;
 
     const A = S(0),
       B = S(0),
       O = S(0, 420, 32);
-    let cur = -1;
+    let cur = -1,
+      want = -1, // the tab asked for, even while the tabs are hidden (mobile)
+      dead = false;
 
     function pick(i: number, snap = false) {
+      want = i;
       if (i < 0) {
         O.t = 0;
         kick();
@@ -80,9 +86,9 @@ export default function NavTabs() {
     pick(active);
 
     const relayout = () => {
-      const i = cur;
+      if (dead) return;
       cur = -1;
-      pick(i, true);
+      pick(want, true);
     };
     window.addEventListener('resize', relayout);
     document.fonts?.ready.then(relayout);
@@ -102,6 +108,7 @@ export default function NavTabs() {
     });
 
     return () => {
+      dead = true;
       lastPill = { l: A.x, r: B.x, o: O.x };
       window.removeEventListener('resize', relayout);
       unregister();

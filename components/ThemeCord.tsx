@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
 
-import { S, step, atRest, register, after, cancel, kick } from 'lib/spring';
+import {
+  S,
+  step,
+  tune,
+  atRest,
+  register,
+  after,
+  cancel,
+  kick
+} from 'lib/spring';
 
 // The slot it hangs in: the same 40px square as the other nav buttons. The
 // cord is the demo's: twelve 9px links, 108px in all, hung from above the
@@ -22,20 +31,7 @@ type P = { x: number; y: number; vx: number; vy: number };
 
 let transitions = 0;
 
-// The demo's light circle: a spring from 0 to 1 (120, 21) to turn the light
-// on, from 1 to 0 (170, 27) to turn it off, run here once and sampled at 60
-// frames a second as keyframes for the reveal. Returns them and the duration.
-function reveal(on: boolean): [number[], number] {
-  const c = S(on ? 0 : 1, on ? 120 : 170, on ? 21 : 27);
-  c.t = on ? 1 : 0;
-  const frames = [c.x];
-  while (!atRest(c) && frames.length < 600) {
-    for (let i = 0; i < 4; i++) step(c, 1 / 240);
-    frames.push(Math.max(0, c.x));
-  }
-  frames[frames.length - 1] = c.t;
-  return [frames, ((frames.length - 1) * 1000) / 60];
-}
+type ViewTransition = { ready: Promise<void>; finished: Promise<void> };
 
 // Pull Cord (designbookmark.com/motion#db-pull-cord), the cord without the
 // lamp. The cord is a chain of points with weight, kept at length by soft
@@ -49,93 +45,17 @@ export default function ThemeCord() {
   const pathRefs = useRef<(SVGPathElement | null)[]>([]);
   const beadRefs = useRef<(HTMLElement | null)[]>([]);
   const grabRef = useRef<HTMLButtonElement>(null);
-  const toggleRef = useRef<() => void>(() => {});
+  const setThemeRef = useRef(setTheme);
+  setThemeRef.current = setTheme;
   const light = resolvedTheme === 'light';
 
   useEffect(() => setMounted(true), []);
-  // Flip the theme the demo's way: the light page is a circle around the
-  // bulb, sized by a spring, that grows over the dark one to turn the light
-  // on and shrinks back into the bulb to turn it off. The page is drawn twice
-  // with View Transitions (old and new), the cord stays live on top, in both
-  // colours, so it keeps swinging through the change. Instant where
-  // unsupported or motion is reduced.
-  toggleRef.current = () => {
-    const root = document.documentElement;
-    let on = false;
-    const apply = () => {
-      // read the theme when the change lands, not when the pull started, so
-      // two quick pulls flip it twice; set the class here so the change is
-      // inside the transition's snapshot
-      on = root.classList.contains('dark');
-      root.classList.toggle('dark', !on);
-      setTheme(on ? 'light' : 'dark');
-    };
-    const doc = document as Document & {
-      startViewTransition?: (update: () => void) => {
-        ready: Promise<void>;
-        finished: Promise<void>;
-      };
-    };
-    if (
-      !doc.startViewTransition ||
-      matchMedia('(prefers-reduced-motion: reduce)').matches
-    )
-      return apply();
-    // centred on the bulb at rest, not where a pull has stretched it to
-    const slot = grabRef.current!.parentElement!.getBoundingClientRect();
-    const cx = BOX / 2,
-      cy = REST + GLOBE,
-      x = slot.left + cx,
-      y = slot.top + cy;
-    const w =
-      Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) +
-      24;
-    const id = ++transitions;
-    const anims: Animation[] = [];
-    root.classList.add('cord-turning');
-    const t = doc.startViewTransition(() => {
-      apply();
-      root.classList.toggle('cord-off', !on);
-    });
-    t.ready
-      .then(() => {
-        const [frames, duration] = reveal(on);
-        // under 4px it is gone, as in the demo
-        const circle = (r: number, ox: number, oy: number) =>
-          `circle(${(r < 4 ? 0 : r).toFixed(1)}px at ${ox}px ${oy}px)`;
-        const opts = { duration, easing: 'linear', fill: 'forwards' as const };
-        // the light page: the new one turning on, the old one turning off,
-        // and the light cord with it, in its own box's coordinates
-        anims.push(
-          root.animate(
-            { clipPath: frames.map((c) => circle(c * w, x, y)) },
-            {
-              ...opts,
-              pseudoElement: `::view-transition-${on ? 'new' : 'old'}(root)`
-            }
-          ),
-          root.animate(
-            { clipPath: frames.map((c) => circle(c * w, cx, cy)) },
-            { ...opts, pseudoElement: '::view-transition-new(cord-light)' }
-          )
-        );
-      })
-      // a newer pull skips this transition; its theme change still applies
-      .catch(() => {});
-    t.finished
-      .catch(() => {})
-      .then(() => {
-        // held at the end (fill: forwards) so nothing flashes before the
-        // transition ends; let go of them now
-        anims.forEach((a) => a.cancel());
-        if (id !== transitions) return;
-        root.classList.remove('cord-turning', 'cord-off');
-      });
-  };
 
   useEffect(() => {
-    const paths = pathRefs.current as SVGPathElement[],
-      beads = beadRefs.current as HTMLElement[],
+    // copies: React empties the ref arrays when the page changes, which can
+    // be a frame before this effect is cleaned up
+    const paths = [...pathRefs.current] as SVGPathElement[],
+      beads = [...beadRefs.current] as HTMLElement[],
       grab = grabRef.current!;
     const HX = S(0, 210, 22),
       HY = S(0, 210, 22); // the hand that pulls on a tap
@@ -165,10 +85,156 @@ export default function ThemeCord() {
     let ghost = false,
       armed = true,
       stretch = 0,
-      side = 1,
-      timer = null;
+      side = 1;
+    // its timers, all cancelled when it goes (a pull that lands after the
+    // page has changed must not start a theme change nobody can finish)
+    const timers = new Set<ReturnType<typeof after>>();
+    const later = (sec: number, fn: () => void) => {
+      const t = after(sec, () => {
+        timers.delete(t);
+        fn();
+      });
+      timers.add(t);
+    };
 
-    const flip = () => after(0.14, () => toggleRef.current());
+    // The light, as in the demo: a spring from 0 (off) to 1 (on), (120, 21)
+    // to turn on and (170, 27) to turn off. It sizes a circle around the
+    // bulb, wherever the bulb has swung to, that is the light page: it grows
+    // over the dark page or shrinks back into the bulb. The page is drawn
+    // twice by a View Transition (old and new) and the cord stays live above
+    // both, once in each theme, the light copy cut to the same circle.
+    const root = document.documentElement;
+    const C = S(root.classList.contains('dark') ? 0 : 1, 120, 21);
+    // the transition's clip animations, rewritten every frame while the light
+    // moves (live) and cancelled once the transition is over: finished, they
+    // still hold their last frame, and they target the pseudo-elements by
+    // name, so they would latch onto the next change's
+    let anims: Animation[] = [],
+      live = false,
+      gone = false;
+    let gx = ax,
+      gy = REST + GLOBE, // the globe's centre, in the slot
+      slot = { left: 0, top: 0 }, // the slot on screen, measured per change
+      cap: ReturnType<typeof setTimeout> | undefined;
+    const measure = () => {
+      slot = grab.parentElement!.getBoundingClientRect();
+    };
+
+    // the light circle, in the page's and in the cord's coordinates
+    const circles = () => {
+      const x = slot.left + gx,
+        y = slot.top + gy;
+      const w =
+        Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) +
+        24;
+      // under 4px it is gone, as in the demo
+      const r = Math.max(0, C.x) * w,
+        R = (r < 4 ? 0 : r).toFixed(1);
+      return [
+        `circle(${R}px at ${x.toFixed(1)}px ${y.toFixed(1)}px)`,
+        `circle(${R}px at ${gx.toFixed(1)}px ${gy.toFixed(1)}px)`
+      ];
+    };
+
+    // end the change on the light's final frame
+    const end = () => {
+      if (!live) return;
+      live = false;
+      anims.forEach((a) => a.finish());
+    };
+
+    function toggle() {
+      // between changes the light just follows the theme, however it was set
+      // (the system's, from another tab), so a pull starts from the truth
+      if (!live && !root.classList.contains('cord-turning')) {
+        C.x = C.t = root.classList.contains('dark') ? 0 : 1;
+        C.v = 0;
+      }
+      const apply = () => {
+        // read the theme when the change lands, so two quick pulls flip it
+        // twice; the class is set here so the change is in the new snapshot
+        const on = root.classList.contains('dark');
+        root.classList.toggle('dark', !on);
+        setThemeRef.current(on ? 'light' : 'dark');
+        C.t = on ? 1 : 0;
+        if (on) tune(C, 120, 21);
+        else tune(C, 170, 27);
+        kick();
+        return on;
+      };
+      const doc = document as Document & {
+        startViewTransition?: (update: () => void) => ViewTransition;
+      };
+      if (
+        !doc.startViewTransition ||
+        matchMedia('(prefers-reduced-motion: reduce)').matches
+      ) {
+        apply();
+        C.x = C.t;
+        C.v = 0;
+        return;
+      }
+      const id = ++transitions;
+      root.classList.add('cord-turning');
+      const t = doc.startViewTransition(() => {
+        // The circle as it is now, in CSS, so the transition's first frame
+        // is already cut right, before its animations attach. A pull in the
+        // middle of a change carries on from the circle where it was.
+        measure();
+        const [page, cord] = circles();
+        // drop the animations of the change this one cuts short
+        anims.forEach((a) => a.cancel());
+        anims = [];
+        live = false;
+        clearTimeout(cap);
+        root.style.setProperty('--cord-page', page);
+        root.style.setProperty('--cord-self', cord);
+        root.classList.toggle('cord-off', !apply());
+      });
+      t.ready
+        .then(() => {
+          if (id !== transitions || gone) return;
+          // held open until the light comes to rest (see render), and
+          // rewritten every frame to follow the bulb and the spring
+          const [page, cord] = circles();
+          const opts = { duration: 1e9, fill: 'both' as const };
+          const off = root.classList.contains('cord-off');
+          anims = [
+            root.animate(
+              { clipPath: [page, page] },
+              {
+                ...opts,
+                pseudoElement: `::view-transition-${off ? 'old' : 'new'}(root)`
+              }
+            ),
+            root.animate(
+              { clipPath: [cord, cord] },
+              { ...opts, pseudoElement: '::view-transition-new(cord-light)' }
+            )
+          ];
+          live = true;
+          kick();
+          // A backstop on the wall clock, apart from the animation loop: if
+          // the loop ever stops driving the light, the change still ends
+          // (the light settles in about a second)
+          cap = setTimeout(end, 3000);
+        })
+        // a newer pull skips this transition; its theme change still applies
+        .catch(() => {});
+      t.finished
+        .catch(() => {})
+        .then(() => {
+          if (id !== transitions) return;
+          clearTimeout(cap);
+          anims.forEach((a) => a.cancel());
+          anims = [];
+          root.classList.remove('cord-turning', 'cord-off');
+          root.style.removeProperty('--cord-page');
+          root.style.removeProperty('--cord-self');
+        });
+    }
+
+    const flip = () => later(0.14, toggle);
     // what holds the bead: a real pointer, or the hand that pulls on a tap
     const pin = () => (held ? [held.x, held.y] : ghost ? [HX.x, HY.x] : null);
     function pull() {
@@ -183,7 +249,7 @@ export default function ThemeCord() {
       HY.v = b.vy;
       HX.t = ax + side * 26;
       HY.t = ay + L + 64;
-      timer = after(1.1, () => {
+      later(1.1, () => {
         ghost = false; // let go even if it never clicked
       });
       kick();
@@ -193,7 +259,10 @@ export default function ThemeCord() {
       const r = grab.parentElement!.getBoundingClientRect();
       return [e.clientX - r.left, e.clientY - r.top];
     };
+    let released = -1e9; // when a pointer last let go of it
     const down = (e: PointerEvent) => {
+      // the main button of the primary pointer only
+      if (e.button !== 0 || !e.isPrimary) return;
       const [x, y] = local(e),
         b = pts[N];
       held = {
@@ -217,6 +286,7 @@ export default function ThemeCord() {
     };
     const move = (e: PointerEvent) => {
       if (!held || e.pointerId !== held.id) return;
+      if (e.pointerType === 'mouse' && e.buttons === 0) return drop(e); // released off-screen
       const [x, y] = local(e);
       held.x = x + held.ox;
       held.y = y + held.oy;
@@ -227,23 +297,26 @@ export default function ThemeCord() {
       if (!held || e.pointerId !== held.id) return;
       const tap = held.moved < 5 && !held.flipped && e.type === 'pointerup';
       held = null;
+      released = performance.now();
       grab.classList.remove('is-held');
       if (tap) pull();
       kick();
     };
-    // keyboard: Enter and Space click the button without a pointer
-    const click = (e: MouseEvent) => {
-      if (!e.detail) pull();
+    // keyboard and assistive tech: a click no pointer just let go of
+    // (Enter, Space, VoiceOver) pulls it for you
+    const click = () => {
+      if (performance.now() - released > 500) pull();
     };
     grab.addEventListener('pointerdown', down);
     grab.addEventListener('pointermove', move);
     grab.addEventListener('pointerup', drop);
     grab.addEventListener('pointercancel', drop);
+    grab.addEventListener('lostpointercapture', drop);
     grab.addEventListener('click', click);
 
     const unregister = register({
       frame(dt) {
-        [HX, HY, K].forEach((s) => step(s, dt));
+        [HX, HY, K, C].forEach((s) => step(s, dt));
         if (dt <= 0) return;
         const p = pin(),
           b = pts[N];
@@ -270,7 +343,7 @@ export default function ThemeCord() {
             armed = false;
             flip();
             if (held) held.flipped = true;
-            else after(0.12, () => (ghost = false));
+            else later(0.12, () => (ghost = false));
           }
         }
         if (!p || !stretch) K.t = 1;
@@ -341,12 +414,29 @@ export default function ThemeCord() {
             (bead.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px) rotate(${ang.toFixed(4)}rad)`)
         );
         grab.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px)`;
+        // the light follows the globe, wherever it swings
+        gx = b.x - Math.sin(ang) * GLOBE;
+        gy = b.y + Math.cos(ang) * GLOBE;
+        if (live && anims.length === 2) {
+          const [page, cord] = circles();
+          (anims[0].effect as KeyframeEffect).setKeyframes([
+            { clipPath: page },
+            { clipPath: page }
+          ]);
+          (anims[1].effect as KeyframeEffect).setKeyframes([
+            { clipPath: cord },
+            { clipPath: cord }
+          ]);
+          // the light has settled: end the transition on its final frame
+          if (atRest(C)) end();
+        }
       },
       // asleep once nobody holds it and the rope has stopped swinging
       idle: () =>
         !held &&
         !ghost &&
-        [HX, HY, K].every((s) => atRest(s)) &&
+        !live &&
+        [HX, HY, K, C].every((s) => atRest(s)) &&
         pts.every((q) => Math.abs(q.vx) < 0.5 && Math.abs(q.vy) < 0.5)
     });
 
@@ -355,9 +445,15 @@ export default function ThemeCord() {
       grab.removeEventListener('pointermove', move);
       grab.removeEventListener('pointerup', drop);
       grab.removeEventListener('pointercancel', drop);
+      grab.removeEventListener('lostpointercapture', drop);
       grab.removeEventListener('click', click);
-      cancel(timer);
+      timers.forEach(cancel);
       unregister();
+      // gone mid-change (the page changed): end it on its final frame, or
+      // the transition, held open for the light, would never end
+      gone = true;
+      clearTimeout(cap);
+      end();
     };
   }, []);
 
