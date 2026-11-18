@@ -38,7 +38,8 @@ const PILL_W = 150,
 // links rise in one by one, dropping away in reverse when it closes.
 export default function MobileMenu() {
   const router = useRouter();
-  const active = LINKS.find((l) => l.href === router.asPath);
+  const path = router.asPath.split(/[?#]/)[0]; // without ?query or #hash
+  const active = LINKS.find((l) => l.href === path);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const b1Ref = useRef<HTMLElement>(null);
@@ -122,12 +123,26 @@ export default function MobileMenu() {
     const away = (e: PointerEvent) => {
       if (!menuRef.current?.contains(e.target as Node)) setOpen(false);
     };
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    // Escape closes it; focus inside goes back to the toggle, not to a link
+    // that is about to hide
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (menuRef.current?.contains(document.activeElement))
+        btnRef.current?.focus();
+      setOpen(false);
+    };
+    // tabbing out of it closes it too
+    const leave = (e: FocusEvent) => {
+      const to = e.relatedTarget as Node | null;
+      if (to && !menuRef.current?.contains(to)) setOpen(false);
+    };
     document.addEventListener('pointerdown', away);
     document.addEventListener('keydown', esc);
+    document.addEventListener('focusout', leave);
     return () => {
       document.removeEventListener('pointerdown', away);
       document.removeEventListener('keydown', esc);
+      document.removeEventListener('focusout', leave);
     };
   }, [open]);
 

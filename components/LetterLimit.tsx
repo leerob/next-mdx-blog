@@ -77,14 +77,20 @@ export default function LetterLimit({
       CP.x = 1.25;
     }
 
-    function sync() {
+    function sync(e?: Event) {
+      // not mid-composition (an IME's draft can run long); it syncs again on
+      // compositionend
+      if (e && (e as InputEvent).isComposing) return;
       let v = input.value;
       if (v.length > limit) {
-        // cut what does not fit, and throw it out
-        const caret = Math.min(input.selectionStart ?? limit, limit);
-        drop(v.slice(limit));
-        input.value = v = v.slice(0, limit);
-        input.setSelectionRange(caret, caret);
+        // cut what does not fit from what was just typed or pasted, just
+        // before the caret, and throw it out
+        const caret = input.selectionStart ?? v.length,
+          over = v.length - limit,
+          from = Math.max(0, caret - over);
+        drop(v.slice(from, from + over));
+        input.value = v = v.slice(0, from) + v.slice(from + over);
+        input.setSelectionRange(from, from);
       }
       const was = len;
       len = v.length;
@@ -99,6 +105,7 @@ export default function LetterLimit({
     }
     syncRef.current = sync;
     input.addEventListener('input', sync);
+    input.addEventListener('compositionend', sync);
     sync();
 
     const unregister = register({
@@ -132,6 +139,7 @@ export default function LetterLimit({
 
     return () => {
       input.removeEventListener('input', sync);
+      input.removeEventListener('compositionend', sync);
       drops.forEach((d) => d.el.remove());
       unregister();
     };

@@ -6,7 +6,11 @@ export default function ProsCard({ title, pros }) {
         {pros.map((pro) => (
           <div key={pro} className="flex font-medium items-baseline mb-2">
             <div className="h-4 w-4 mr-2">
-              <svg className="h-4 w-4 text-green-500" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4 text-green-500"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <g
                   fill="none"
                   stroke="currentColor"

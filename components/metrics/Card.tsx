@@ -40,7 +40,6 @@ function RollingNumber({ value }: { value: number }) {
 export default function MetricCard({ header, link, metric, isCurrency }) {
   return (
     <a
-      aria-label={header}
       target="_blank"
       rel="noopener noreferrer"
       href={link}

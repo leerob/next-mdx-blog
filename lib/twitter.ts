@@ -1,5 +1,8 @@
+// Tweets embedded in a blog post, fetched at build time. Any failure (no API
+// key, an error response, a network error) yields no tweets rather than
+// failing the build.
 export const getTweets = async (ids) => {
-  if (ids.length === 0) {
+  if (ids.length === 0 || !process.env.TWITTER_API_KEY) {
     return [];
   }
 
@@ -11,54 +14,73 @@ export const getTweets = async (ids) => {
       'attachments,author_id,public_metrics,created_at,id,in_reply_to_user_id,referenced_tweets,text',
     'user.fields': 'id,name,profile_image_url,protected,url,username,verified',
     'media.fields':
-      'duration_ms,height,media_key,preview_image_url,type,url,width,public_metrics'
+      'alt_text,duration_ms,height,media_key,preview_image_url,type,url,width,public_metrics'
   });
 
-  console.log(process.env.TWITTER_API_KEY);
-  const response = await fetch(
-    `https://api.twitter.com/2/tweets?${queryParams}`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.TWITTER_API_KEY}`
+  let tweets;
+  try {
+    const response = await fetch(
+      `https://api.twitter.com/2/tweets?${queryParams}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.TWITTER_API_KEY}`
+        }
       }
+    );
+    if (!response.ok) {
+      return [];
     }
-  );
+    tweets = await response.json();
+  } catch {
+    return [];
+  }
 
-  const tweets = await response.json();
+  if (!Array.isArray(tweets?.data)) {
+    return [];
+  }
+
+  const users = tweets.includes?.users ?? [];
+  const includedTweets = tweets.includes?.tweets ?? [];
+  const includedMedia = tweets.includes?.media ?? [];
 
   const getAuthorInfo = (author_id) => {
-    return tweets.includes.users.find((user) => user.id === author_id);
+    return users.find((user) => user.id === author_id);
   };
 
   const getReferencedTweets = (mainTweet) => {
     return (
-      mainTweet?.referenced_tweets?.map((referencedTweet) => {
-        const fullReferencedTweet = tweets.includes.tweets.find(
+      mainTweet?.referenced_tweets?.flatMap((referencedTweet) => {
+        const fullReferencedTweet = includedTweets.find(
           (tweet) => tweet.id === referencedTweet.id
         );
 
-        return {
-          type: referencedTweet.type,
-          author: getAuthorInfo(fullReferencedTweet.author_id),
-          ...fullReferencedTweet
-        };
-      }) || []
+        // deleted or protected tweets are missing from `includes`
+        if (!fullReferencedTweet) {
+          return [];
+        }
+
+        return [
+          {
+            type: referencedTweet.type,
+            author: getAuthorInfo(fullReferencedTweet.author_id),
+            ...fullReferencedTweet
+          }
+        ];
+      }) ?? []
     );
   };
 
-  return (
-    tweets.data.reduce((allTweets, tweet) => {
-      const tweetWithAuthor = {
-        ...tweet,
-        media:
-          tweet?.attachments?.media_keys.map((key) =>
-            tweets.includes.media.find((media) => media.media_key === key)
-          ) || [],
-        referenced_tweets: getReferencedTweets(tweet),
-        author: getAuthorInfo(tweet.author_id)
-      };
+  return tweets.data.reduce((allTweets, tweet) => {
+    const tweetWithAuthor = {
+      ...tweet,
+      media:
+        tweet?.attachments?.media_keys
+          ?.map((key) => includedMedia.find((media) => media.media_key === key))
+          .filter(Boolean) ?? [],
+      referenced_tweets: getReferencedTweets(tweet),
+      author: getAuthorInfo(tweet.author_id)
+    };
 
-      return [tweetWithAuthor, ...allTweets];
-    }, []) || [] // If the Twitter API key isn't set, don't break the build
-  );
+    return [tweetWithAuthor, ...allTweets];
+  }, []);
 };

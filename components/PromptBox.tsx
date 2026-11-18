@@ -141,7 +141,14 @@ export default function PromptBox({
           aria-label="Your message"
           placeholder={placeholder}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            // not while an IME is composing: there Enter picks a candidate
+            // (Safari reports keyCode 229 on that keydown)
+            if (
+              e.key === 'Enter' &&
+              !e.shiftKey &&
+              !e.nativeEvent.isComposing &&
+              e.keyCode !== 229
+            ) {
               e.preventDefault();
               formRef.current?.requestSubmit();
             }

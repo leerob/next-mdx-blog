@@ -28,7 +28,7 @@ export async function getStaticProps({ params, preview = false }) {
   });
 
   if (!snippet) {
-    return { notFound: true };
+    return { notFound: true, revalidate: 60 };
   }
 
   const { html } = await mdxToHtml(snippet.content);
@@ -39,6 +39,7 @@ export async function getStaticProps({ params, preview = false }) {
         ...snippet,
         content: html
       }
-    }
+    },
+    revalidate: 3600
   };
 }

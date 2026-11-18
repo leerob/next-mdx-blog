@@ -6,6 +6,8 @@ import { SessionProvider } from 'next-auth/react';
 import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 
+import SiteNav from 'components/SiteNav';
+
 const interVariable = Inter({
   subsets: ['latin']
 });
@@ -15,12 +17,15 @@ export default function App({
   pageProps: { session, ...pageProps }
 }) {
   return (
-    <SessionProvider session={session}>
+    <SessionProvider session={session} refetchOnWindowFocus={false}>
       <ThemeProvider attribute="class">
-        <main className={interVariable.className}>
+        <div
+          className={`${interVariable.className} bg-gray-50 dark:bg-gray-900`}
+        >
+          <SiteNav />
           <Component {...pageProps} />
           <Analytics />
-        </main>
+        </div>
       </ThemeProvider>
     </SessionProvider>
   );

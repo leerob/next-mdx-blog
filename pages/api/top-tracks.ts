@@ -6,20 +6,40 @@ export const config = {
 };
 
 export default async function handler(req: NextRequest) {
-  const response = await getTopTracks();
-  const { items } = await response.json();
+  let tracks = null;
+  try {
+    const response = await getTopTracks();
+    if (response.ok) {
+      const { items } = await response.json();
+      if (Array.isArray(items)) {
+        tracks = items.slice(0, 10).map((track) => ({
+          artist: track.artists.map((_artist) => _artist.name).join(', '),
+          songUrl: track.external_urls.spotify,
+          title: track.name
+        }));
+      }
+    }
+  } catch {
+    // token or network error: handled below like any other failure
+  }
 
-  const tracks = items.slice(0, 10).map((track) => ({
-    artist: track.artists.map((_artist) => _artist.name).join(', '),
-    songUrl: track.external_urls.spotify,
-    title: track.name
-  }));
+  // never cache a failure, so it can't replace the last good list
+  if (!tracks) {
+    return new Response(JSON.stringify({ tracks: [] }), {
+      status: 503,
+      headers: {
+        'content-type': 'application/json',
+        'cache-control': 'no-store'
+      }
+    });
+  }
 
   return new Response(JSON.stringify({ tracks }), {
     status: 200,
     headers: {
       'content-type': 'application/json',
-      'cache-control': 'public, s-maxage=86400, stale-while-revalidate=43200'
+      'cache-control':
+        'public, s-maxage=86400, stale-while-revalidate=43200, stale-if-error=86400'
     }
   });
 }

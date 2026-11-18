@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import Container from 'components/Container';
 import BlogPost from 'components/BlogPost';
@@ -34,9 +34,9 @@ export default function Blog({
         <GhostSearch titles={titles} onChange={setSearchValue} />
         {!searchValue && (
           <>
-            <h3 className="mt-8 mb-4 text-2xl font-bold tracking-tight text-black md:text-4xl dark:text-white">
+            <h2 className="mt-8 mb-4 text-2xl font-bold tracking-tight text-black md:text-4xl dark:text-white">
               Most Popular
-            </h3>
+            </h2>
             <BlogPost
               title="Evolution of Policy Gradient Methods"
               excerpt="The blog explores the evolution from vanilla policy gradients to modern approaches like Proximal Policy Optimization (PPO) and the more recent Group Relative Policy Optimization (GRPO)."
@@ -54,24 +54,22 @@ export default function Blog({
             />
           </>
         )}
-        <Suspense fallback={null}>
-          <h3 className="mt-8 mb-4 text-2xl font-bold tracking-tight text-black md:text-4xl dark:text-white">
-            All Posts
-          </h3>
-          {!filteredBlogPosts.length && (
-            <p className="mb-4 text-gray-600 dark:text-gray-400">
-              No posts found.
-            </p>
-          )}
-          {filteredBlogPosts.map((post) => (
-            <BlogPost
-              key={post.title}
-              slug={post.slug}
-              title={post.title}
-              excerpt={post.excerpt}
-            />
-          ))}
-        </Suspense>
+        <h2 className="mt-8 mb-4 text-2xl font-bold tracking-tight text-black md:text-4xl dark:text-white">
+          All Posts
+        </h2>
+        {!filteredBlogPosts.length && (
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
+            No posts found.
+          </p>
+        )}
+        {filteredBlogPosts.map((post) => (
+          <BlogPost
+            key={post.slug}
+            slug={post.slug}
+            title={post.title}
+            excerpt={post.excerpt}
+          />
+        ))}
       </div>
     </Container>
   );
@@ -80,5 +78,5 @@ export default function Blog({
 export async function getStaticProps({ preview = false }) {
   const posts: Post[] = await getClient(preview).fetch(indexQuery);
 
-  return { props: { posts } };
+  return { props: { posts }, revalidate: 3600 };
 }

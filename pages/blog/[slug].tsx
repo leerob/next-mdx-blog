@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { MDXRemote } from 'next-mdx-remote';
 import BlogLayout from 'layouts/blog';
 import Tweet from 'components/Tweet';
@@ -9,22 +10,20 @@ import { mdxToHtml } from 'lib/mdx';
 import { Post } from 'lib/types';
 
 export default function PostPage({ post }: { post: Post }) {
-  const StaticTweet = ({ id }) => {
-    const tweet = post.tweets.find((tweet) => tweet.id === id);
-    return <Tweet {...tweet} />;
-  };
+  // Built once per post so StaticTweet keeps a stable component identity
+  // across renders (a component defined inline would remount every time).
+  const mdxComponents = useMemo(() => {
+    const tweets = post.tweets ?? [];
+    const StaticTweet = ({ id }) => {
+      const tweet = tweets.find((tweet) => tweet.id === id);
+      return tweet ? <Tweet {...tweet} /> : null;
+    };
+    return { ...components, StaticTweet };
+  }, [post.tweets]);
 
   return (
     <BlogLayout post={post}>
-      <MDXRemote
-        {...post.content}
-        components={
-          {
-            ...components,
-            StaticTweet
-          } as any
-        }
-      />
+      <MDXRemote {...post.content} components={mdxComponents as any} />
     </BlogLayout>
   );
 }
@@ -43,7 +42,7 @@ export async function getStaticProps({ params, preview = false }) {
   });
 
   if (!post) {
-    return { notFound: true };
+    return { notFound: true, revalidate: 60 };
   }
 
   const { html, tweetIDs, readingTime } = await mdxToHtml(post.content);
@@ -57,6 +56,7 @@ export async function getStaticProps({ params, preview = false }) {
         tweets,
         readingTime
       }
-    }
+    },
+    revalidate: 3600
   };
 }

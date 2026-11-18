@@ -15,14 +15,16 @@ export default function FunctionCard({
       className="surface block w-full rounded-3xl p-5 transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
       {...rest}
     >
-      <Image
-        alt={title}
-        // 48px, the size of the video thumbnails on the home page
-        height={48}
-        width={48}
-        src={urlForImage(logo).url()}
-        className="rounded-[22%]"
-      />
+      {logo ? (
+        <Image
+          alt=""
+          // 48px, the size of the video thumbnails on the home page
+          height={48}
+          width={48}
+          src={urlForImage(logo).url()}
+          className="rounded-[22%]"
+        />
+      ) : null}
       <h3 className="mt-4 text-lg font-semibold leading-snug tracking-tight text-ink">
         {title}
       </h3>

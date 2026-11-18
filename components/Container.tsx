@@ -2,13 +2,12 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import Footer from 'components/Footer';
-import MobileMenu from 'components/MobileMenu';
-import NavTabs from 'components/NavTabs';
-import ThemeCord from 'components/ThemeCord';
 
 export default function Container(props) {
-  const { children, ...customMeta } = props;
+  const { children, noindex = false, ...customMeta } = props;
   const router = useRouter();
+  const path = router.asPath.split(/[?#]/)[0];
+  const url = `https://www.ziyizhu.com${path}`;
   const meta = {
     title: 'Ziyi Zhu',
     description: `Curious mind, researcher and tech enthusiast.`,
@@ -21,16 +20,10 @@ export default function Container(props) {
     <div className="bg-gray-50 dark:bg-gray-900">
       <Head>
         <title>{meta.title}</title>
-        <meta name="robots" content="follow, index" />
+        <meta name="robots" content={noindex ? 'noindex' : 'follow, index'} />
         <meta content={meta.description} name="description" />
-        <meta
-          property="og:url"
-          content={`https://www.ziyizhu.com${router.asPath}`}
-        />
-        <link
-          rel="canonical"
-          href={`https://www.ziyizhu.com${router.asPath}`}
-        />
+        <meta property="og:url" content={url} />
+        <link rel="canonical" href={url} />
         <meta property="og:type" content={meta.type} />
         <meta property="og:site_name" content="Ziyi Zhu" />
         <meta property="og:description" content={meta.description} />
@@ -45,18 +38,6 @@ export default function Container(props) {
           <meta property="article:published_time" content={meta.date} />
         )}
       </Head>
-      <div className="flex flex-col justify-center px-8">
-        <nav className="flex items-center justify-between w-full relative max-w-2xl border-gray-200 dark:border-gray-700 mx-auto pt-8 pb-8 sm:pb-16  text-gray-900 bg-gray-50  dark:bg-gray-900 bg-opacity-60 dark:text-gray-100">
-          <a href="#skip" className="skip-nav">
-            Skip to content
-          </a>
-          <div className="flex items-center md:-ml-3.5">
-            <MobileMenu />
-            <NavTabs />
-          </div>
-          <ThemeCord />
-        </nav>
-      </div>
       <main
         id="skip"
         className="flex flex-col justify-center px-8 bg-gray-50 dark:bg-gray-900"

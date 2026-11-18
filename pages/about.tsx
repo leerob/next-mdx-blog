@@ -58,7 +58,7 @@ export default function About() {
           <div className="flex space-x-8">
             <a href="/avatar.jpg">
               <Image
-                alt="Ziyi Zhu headshot"
+                alt="Ziyi Zhu headshot in colour"
                 width={400}
                 quality={100}
                 src={avatar}
@@ -67,7 +67,7 @@ export default function About() {
             </a>
             <a href="/avatar-bw.jpg">
               <Image
-                alt="Ziyi Zhu headshot"
+                alt="Ziyi Zhu headshot in black and white"
                 width={400}
                 quality={100}
                 src={avatarBW}
