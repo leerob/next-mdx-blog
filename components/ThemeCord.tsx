@@ -25,7 +25,8 @@ const BOX = 40,
   N = 12, // links in the cord
   L = 108, // its length (9px a link)
   CLICK = 22, // stretch that flips the switch (the original's)
-  MAXS = 54; // the most it gives
+  MAXS = 54, // the most it gives
+  TICK = 1 / 240; // the rope's fixed step (see tick)
 
 type P = { x: number; y: number; vx: number; vy: number };
 
@@ -85,7 +86,11 @@ export default function ThemeCord() {
     let ghost = false,
       armed = true,
       stretch = 0,
-      side = 1;
+      side = 1,
+      acc = 0, // time not yet stepped (see tick)
+      asleep = false,
+      calm = 0, // how long it has been still
+      moved = true; // stepped since it was last drawn
     // its timers, all cancelled when it goes (a pull that lands after the
     // page has changed must not start a theme change nobody can finish)
     const timers = new Set<ReturnType<typeof after>>();
@@ -239,6 +244,7 @@ export default function ThemeCord() {
     const pin = () => (held ? [held.x, held.y] : ghost ? [HX.x, HY.x] : null);
     function pull() {
       if (ghost || held) return;
+      asleep = false;
       const b = pts[N];
       ghost = true;
       armed = true;
@@ -278,6 +284,7 @@ export default function ThemeCord() {
       };
       ghost = false;
       armed = true;
+      asleep = false;
       try {
         grab.setPointerCapture(e.pointerId);
       } catch {}
@@ -314,93 +321,123 @@ export default function ThemeCord() {
     grab.addEventListener('lostpointercapture', drop);
     grab.addEventListener('click', click);
 
-    const unregister = register({
-      frame(dt) {
-        [HX, HY, K, C].forEach((s) => step(s, dt));
-        if (dt <= 0) return;
-        const p = pin(),
-          b = pts[N];
+    // One step of the rope. It runs on a fixed step, whatever the screen's
+    // frame rate: the sag a rope like this settles into depends on the step,
+    // so a step that varied with the frame rate (iOS moves between 60 and
+    // 120 a second whenever anything animates) would nudge the resting bead
+    // every time. Settled and untouched, it sleeps until the next touch.
+    function tick(dt: number) {
+      [HX, HY, K].forEach((s) => step(s, dt));
+      const p = pin(),
+        b = pts[N];
 
-        // the held end: free inside the cord's reach, rubber past it
-        let px = 0,
-          py = 0;
-        stretch = 0;
-        if (p) {
-          const dx = p[0] - ax,
-            dy = p[1] - ay,
-            d = Math.hypot(dx, dy) || 1;
-          const over = Math.max(0, d - L),
-            give = MAXS * (1 - Math.exp(-over / 70)),
-            r = Math.min(d, L) + give;
-          px = ax + (dx / d) * r;
-          py = ay + (dy / d) * r;
-          stretch = give;
-          if (over > 0) {
-            K.x = K.t = r / L;
-            K.v = 0;
-          }
-          if (armed && give > CLICK) {
-            armed = false;
-            flip();
-            if (held) held.flipped = true;
-            else later(0.12, () => (ghost = false));
-          }
+      // the held end: free inside the cord's reach, rubber past it
+      let px = 0,
+        py = 0;
+      stretch = 0;
+      if (p) {
+        const dx = p[0] - ax,
+          dy = p[1] - ay,
+          d = Math.hypot(dx, dy) || 1;
+        const over = Math.max(0, d - L),
+          give = MAXS * (1 - Math.exp(-over / 70)),
+          r = Math.min(d, L) + give;
+        px = ax + (dx / d) * r;
+        py = ay + (dy / d) * r;
+        stretch = give;
+        if (over > 0) {
+          K.x = K.t = r / L;
+          K.v = 0;
         }
-        if (!p || !stretch) K.t = 1;
-        const seg = SEG * Math.max(1, K.x);
+        if (armed && give > CLICK) {
+          armed = false;
+          flip();
+          if (held) held.flipped = true;
+          else later(0.12, () => (ghost = false));
+        }
+      }
+      if (!p || !stretch) K.t = 1;
+      const seg = SEG * Math.max(1, K.x);
 
-        // the rope: gravity, then links pulled back to length a few times
-        const prev = pts.map((q) => [q.x, q.y]);
-        for (let i = 1; i <= N; i++) {
-          const q = pts[i],
-            k = Math.exp(-(i === N ? 1.1 : 2.4) * dt);
-          q.vy += 2600 * dt;
-          q.vx *= k;
-          q.vy *= k;
-          const sp = Math.hypot(q.vx, q.vy);
-          if (sp > 2600) {
-            q.vx *= 2600 / sp;
-            q.vy *= 2600 / sp;
-          }
-          q.x += q.vx * dt;
-          q.y += q.vy * dt;
+      // the rope: gravity, then links pulled back to length a few times
+      const prev = pts.map((q) => [q.x, q.y]);
+      for (let i = 1; i <= N; i++) {
+        const q = pts[i],
+          k = Math.exp(-(i === N ? 1.1 : 2.4) * dt);
+        q.vy += 2600 * dt;
+        q.vx *= k;
+        q.vy *= k;
+        const sp = Math.hypot(q.vx, q.vy);
+        if (sp > 2600) {
+          q.vx *= 2600 / sp;
+          q.vy *= 2600 / sp;
         }
-        for (let it = 0; it < 8; it++) {
-          pts[0].x = ax;
-          pts[0].y = ay;
-          if (p) {
-            b.x = px;
-            b.y = py;
-          }
-          for (let i = 0; i < N; i++) {
-            const a = pts[i],
-              c = pts[i + 1],
-              dx = c.x - a.x,
-              dy = c.y - a.y,
-              d = Math.hypot(dx, dy) || 1e-6,
-              f = ((d - seg) / d) * 0.5;
-            // the bead is heavy
-            const wa = i === 0 ? 0 : 1,
-              wc = i + 1 === N ? (p ? 0 : 0.3) : 1,
-              sum = wa + wc || 1;
-            a.x += ((dx * f * wa) / sum) * 2;
-            a.y += ((dy * f * wa) / sum) * 2;
-            c.x -= ((dx * f * wc) / sum) * 2;
-            c.y -= ((dy * f * wc) / sum) * 2;
-          }
-        }
+        q.x += q.vx * dt;
+        q.y += q.vy * dt;
+      }
+      for (let it = 0; it < 8; it++) {
         pts[0].x = ax;
         pts[0].y = ay;
         if (p) {
           b.x = px;
           b.y = py;
         }
-        for (let i = 1; i <= N; i++) {
-          pts[i].vx = (pts[i].x - prev[i][0]) / dt;
-          pts[i].vy = (pts[i].y - prev[i][1]) / dt;
+        for (let i = 0; i < N; i++) {
+          const a = pts[i],
+            c = pts[i + 1],
+            dx = c.x - a.x,
+            dy = c.y - a.y,
+            d = Math.hypot(dx, dy) || 1e-6,
+            f = ((d - seg) / d) * 0.5;
+          // the bead is heavy
+          const wa = i === 0 ? 0 : 1,
+            wc = i + 1 === N ? (p ? 0 : 0.3) : 1,
+            sum = wa + wc || 1;
+          a.x += ((dx * f * wa) / sum) * 2;
+          a.y += ((dy * f * wa) / sum) * 2;
+          c.x -= ((dx * f * wc) / sum) * 2;
+          c.y -= ((dy * f * wc) / sum) * 2;
+        }
+      }
+      pts[0].x = ax;
+      pts[0].y = ay;
+      if (p) {
+        b.x = px;
+        b.y = py;
+      }
+      for (let i = 1; i <= N; i++) {
+        pts[i].vx = (pts[i].x - prev[i][0]) / dt;
+        pts[i].vy = (pts[i].y - prev[i][1]) / dt;
+      }
+      moved = true;
+      // still for a quarter of a second, not just at the turn of a swing
+      const still =
+        !held &&
+        !ghost &&
+        [HX, HY, K].every((s) => atRest(s)) &&
+        pts.every((q) => Math.abs(q.vx) < 0.5 && Math.abs(q.vy) < 0.5);
+      calm = still ? calm + dt : 0;
+      if (calm > 0.25) {
+        asleep = true;
+        calm = 0;
+        pts.forEach((q) => (q.vx = q.vy = 0));
+      }
+    }
+
+    const unregister = register({
+      frame(dt) {
+        step(C, dt);
+        if (asleep) return;
+        acc += dt;
+        while (acc >= TICK) {
+          acc -= TICK;
+          tick(TICK);
+          if (asleep) break;
         }
       },
       render() {
+        if (!moved && !live) return; // asleep: nothing new to draw
+        moved = false;
         const b = pts[N],
           e = pts[N - 1];
         let d = `M${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
@@ -431,13 +468,8 @@ export default function ThemeCord() {
           if (atRest(C)) end();
         }
       },
-      // asleep once nobody holds it and the rope has stopped swinging
-      idle: () =>
-        !held &&
-        !ghost &&
-        !live &&
-        [HX, HY, K, C].every((s) => atRest(s)) &&
-        pts.every((q) => Math.abs(q.vx) < 0.5 && Math.abs(q.vy) < 0.5)
+      // idle once the rope sleeps and no change is running
+      idle: () => asleep && !moved && !live && atRest(C)
     });
 
     return () => {
