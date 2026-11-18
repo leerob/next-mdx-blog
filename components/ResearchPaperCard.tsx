@@ -49,6 +49,9 @@ export default function ResearchPaperCard(paper: Paper) {
     const stage = stageRef.current!,
       card = cardRef.current!,
       glare = glareRef.current!;
+    const faces = Array.from(
+      card.querySelectorAll<HTMLElement>('.ticket-side')
+    );
     const layers = Array.from(
       card.querySelectorAll<HTMLElement>('[data-depth]')
     ).map((el) => ({
@@ -110,7 +113,15 @@ export default function ResearchPaperCard(paper: Paper) {
         [RX, RY, G, LIFT, F].forEach((s) => step(s, dt));
       },
       render() {
-        card.style.transform = `rotateX(${RX.x.toFixed(3)}deg) rotateY(${(RY.x + F.x).toFixed(3)}deg) scale(${LIFT.x.toFixed(4)})`;
+        const ry = RY.x + F.x;
+        card.style.transform = `rotateX(${RX.x.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg) scale(${LIFT.x.toFixed(4)})`;
+        // Show only the face turned toward the viewer. backface-visibility
+        // alone is not enough: iOS Safari ignores it in some paths (the
+        // snapshot a theme change's view transition takes, for one) and
+        // draws the back face mirrored over the front.
+        const front = Math.cos((ry * Math.PI) / 180) >= 0;
+        faces[0].style.visibility = front ? 'visible' : 'hidden';
+        faces[1].style.visibility = front ? 'hidden' : 'visible';
         // parallax: layers slide by depth against the tilt
         const ox = RY.x / TILT,
           oy = -RX.x / TILT;
@@ -219,7 +230,11 @@ export default function ResearchPaperCard(paper: Paper) {
         <div
           className="ticket-side flex flex-col p-5 [transform:rotateY(180deg)]"
           aria-hidden={!flipped}
-          style={{ pointerEvents: flipped ? 'auto' : 'none' }}
+          // hidden until the card turns (the render loop keeps it in step)
+          style={{
+            pointerEvents: flipped ? 'auto' : 'none',
+            visibility: 'hidden'
+          }}
         >
           {/* Laid out from the examples' own parts: the expand card's chip,
               the profile card's bio, the ticket back's seat row (small label
