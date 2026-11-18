@@ -4,22 +4,38 @@ import { useTheme } from 'next-themes';
 import { S, step, atRest, register, after, cancel, kick } from 'lib/spring';
 
 // The slot it hangs in: the same 40px square as the other nav buttons. The
-// cord comes down from the very top of the page and the bead rests in the
-// middle of the slot. How far the slot sits below the top is measured, not
-// assumed, so the cord still reaches the top when the nav's height changes
-// (the mobile menu is taller than the slot, for one).
+// cord is the demo's: twelve 9px links, 108px in all, hung from above the
+// top of the page so the bead rests in the slot; the long cord is what makes
+// it swing as wide as the demo's.
 const BOX = 40,
   // the bead: the classic bulb icon (drawn 682 units tall, see below),
   // hung tip up and exactly as tall as the slot, so it fills it like a button
   BULB = (418 * BOX) / 682, // its width, about 24.5px
   GLOBE = (473.5 * BOX) / 682, // the globe's centre, below the top
   REST = 0, // where the bead hangs from: the slot's top
-  TOP0 = 32, // the nav's top padding: the first guess, before measuring
-  N = 8, // links in the cord
+  N = 12, // links in the cord
+  L = 108, // its length (9px a link)
   CLICK = 22, // stretch that flips the switch (the original's)
   MAXS = 54; // the most it gives
 
 type P = { x: number; y: number; vx: number; vy: number };
+
+let transitions = 0;
+
+// The demo's light circle: a spring from 0 to 1 (120, 21) to turn the light
+// on, from 1 to 0 (170, 27) to turn it off, run here once and sampled at 60
+// frames a second as keyframes for the reveal. Returns them and the duration.
+function reveal(on: boolean): [number[], number] {
+  const c = S(on ? 0 : 1, on ? 120 : 170, on ? 21 : 27);
+  c.t = on ? 1 : 0;
+  const frames = [c.x];
+  while (!atRest(c) && frames.length < 600) {
+    for (let i = 0; i < 4; i++) step(c, 1 / 240);
+    frames.push(Math.max(0, c.x));
+  }
+  frames[frames.length - 1] = c.t;
+  return [frames, ((frames.length - 1) * 1000) / 60];
+}
 
 // Pull Cord (designbookmark.com/motion#db-pull-cord), the cord without the
 // lamp. The cord is a chain of points with weight, kept at length by soft
@@ -30,28 +46,34 @@ type P = { x: number; y: number; vx: number; vy: number };
 export default function ThemeCord() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const pathRef = useRef<SVGPathElement>(null);
-  const beadRef = useRef<HTMLElement>(null);
+  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
+  const beadRefs = useRef<(HTMLElement | null)[]>([]);
   const grabRef = useRef<HTMLButtonElement>(null);
   const toggleRef = useRef<() => void>(() => {});
   const light = resolvedTheme === 'light';
 
   useEffect(() => setMounted(true), []);
-  // Flip the theme, revealing the new one in a circle that grows from the
-  // bulb (View Transitions); instant where unsupported or motion is reduced.
+  // Flip the theme the demo's way: the light page is a circle around the
+  // bulb, sized by a spring, that grows over the dark one to turn the light
+  // on and shrinks back into the bulb to turn it off. The page is drawn twice
+  // with View Transitions (old and new), the cord stays live on top, in both
+  // colours, so it keeps swinging through the change. Instant where
+  // unsupported or motion is reduced.
   toggleRef.current = () => {
     const root = document.documentElement;
+    let on = false;
     const apply = () => {
       // read the theme when the change lands, not when the pull started, so
       // two quick pulls flip it twice; set the class here so the change is
       // inside the transition's snapshot
-      const next = root.classList.contains('dark') ? 'light' : 'dark';
-      root.classList.toggle('dark', next === 'dark');
-      setTheme(next);
+      on = root.classList.contains('dark');
+      root.classList.toggle('dark', !on);
+      setTheme(on ? 'light' : 'dark');
     };
     const doc = document as Document & {
       startViewTransition?: (update: () => void) => {
         ready: Promise<void>;
+        finished: Promise<void>;
       };
     };
     if (
@@ -60,77 +82,75 @@ export default function ThemeCord() {
     )
       return apply();
     // centred on the bulb at rest, not where a pull has stretched it to
-    const slot = beadRef.current!.parentElement!.getBoundingClientRect();
-    const x = slot.left + BOX / 2,
-      y = slot.top + REST + GLOBE;
-    const r = Math.hypot(
-      Math.max(x, innerWidth - x),
-      Math.max(y, innerHeight - y)
-    );
-    doc
-      .startViewTransition(apply)
-      .ready.then(() =>
-        root.animate(
-          {
-            clipPath: [
-              `circle(0px at ${x}px ${y}px)`,
-              `circle(${r}px at ${x}px ${y}px)`
-            ]
-          },
-          {
-            duration: 1000,
-            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            pseudoElement: '::view-transition-new(root)'
-          }
-        )
-      )
+    const slot = grabRef.current!.parentElement!.getBoundingClientRect();
+    const cx = BOX / 2,
+      cy = REST + GLOBE,
+      x = slot.left + cx,
+      y = slot.top + cy;
+    const w =
+      Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) +
+      24;
+    const id = ++transitions;
+    const anims: Animation[] = [];
+    root.classList.add('cord-turning');
+    const t = doc.startViewTransition(() => {
+      apply();
+      root.classList.toggle('cord-off', !on);
+    });
+    t.ready
+      .then(() => {
+        const [frames, duration] = reveal(on);
+        // under 4px it is gone, as in the demo
+        const circle = (r: number, ox: number, oy: number) =>
+          `circle(${(r < 4 ? 0 : r).toFixed(1)}px at ${ox}px ${oy}px)`;
+        const opts = { duration, easing: 'linear', fill: 'forwards' as const };
+        // the light page: the new one turning on, the old one turning off,
+        // and the light cord with it, in its own box's coordinates
+        anims.push(
+          root.animate(
+            { clipPath: frames.map((c) => circle(c * w, x, y)) },
+            {
+              ...opts,
+              pseudoElement: `::view-transition-${on ? 'new' : 'old'}(root)`
+            }
+          ),
+          root.animate(
+            { clipPath: frames.map((c) => circle(c * w, cx, cy)) },
+            { ...opts, pseudoElement: '::view-transition-new(cord-light)' }
+          )
+        );
+      })
       // a newer pull skips this transition; its theme change still applies
       .catch(() => {});
+    t.finished
+      .catch(() => {})
+      .then(() => {
+        // held at the end (fill: forwards) so nothing flashes before the
+        // transition ends; let go of them now
+        anims.forEach((a) => a.cancel());
+        if (id !== transitions) return;
+        root.classList.remove('cord-turning', 'cord-off');
+      });
   };
 
   useEffect(() => {
-    const path = pathRef.current!,
-      bead = beadRef.current!,
+    const paths = pathRefs.current as SVGPathElement[],
+      beads = beadRefs.current as HTMLElement[],
       grab = grabRef.current!;
     const HX = S(0, 210, 22),
       HY = S(0, 210, 22); // the hand that pulls on a tap
     const K = S(1, 300, 17); // how far the cord is stretched: it eases back, so letting go is a bounce and not a whip
-    const slot = grab.parentElement!;
-    // where the cord hangs from: the top of the page, measured from the slot;
-    // its length then puts the bead back at the slot's middle
-    const ax = BOX / 2;
-    let ay = -TOP0,
-      L = TOP0 + REST,
+    // where the cord hangs from: its length above the bead's rest, which is
+    // off the top of the page
+    const ax = BOX / 2,
+      ay = REST - L,
       SEG = L / N;
-    const pts: P[] = Array.from({ length: N + 1 }, () => ({
-      x: 0,
-      y: 0,
+    const pts: P[] = Array.from({ length: N + 1 }, (_, i) => ({
+      x: ax,
+      y: ay + i * SEG,
       vx: 0,
       vy: 0
     }));
-    const hang = () =>
-      pts.forEach((q, i) => {
-        q.x = ax;
-        q.y = ay + i * SEG;
-        q.vx = q.vy = 0;
-      });
-    let measured = false;
-    const measure = () => {
-      const top = slot.getBoundingClientRect().top + window.scrollY;
-      if (measured && Math.abs(top + ay) < 0.5) return;
-      measured = true;
-      ay = -top;
-      L = top + REST;
-      SEG = L / N;
-      hang();
-      kick();
-    };
-    measure();
-    // re-measure when the nav changes size (breakpoints, fonts loading)
-    const nav = slot.closest('nav') ?? document.body;
-    const ro = new ResizeObserver(measure);
-    ro.observe(nav);
-    window.addEventListener('resize', measure);
     let held: {
       id: number;
       x: number;
@@ -161,7 +181,7 @@ export default function ThemeCord() {
       HY.x = b.y;
       HX.v = b.vx;
       HY.v = b.vy;
-      HX.t = ax + side * 10;
+      HX.t = ax + side * 26;
       HY.t = ay + L + 64;
       timer = after(1.1, () => {
         ghost = false; // let go even if it never clicked
@@ -314,9 +334,12 @@ export default function ThemeCord() {
         for (let i = 1; i < N; i++)
           d += `Q${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)} ${((pts[i].x + pts[i + 1].x) / 2).toFixed(1)} ${((pts[i].y + pts[i + 1].y) / 2).toFixed(1)}`;
         d += `L${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
-        path.setAttribute('d', d);
         const ang = Math.atan2(e.x - b.x, b.y - e.y);
-        bead.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px) rotate(${ang.toFixed(4)}rad)`;
+        paths.forEach((path) => path.setAttribute('d', d));
+        beads.forEach(
+          (bead) =>
+            (bead.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px) rotate(${ang.toFixed(4)}rad)`)
+        );
         grab.style.transform = `translate(${b.x.toFixed(2)}px,${b.y.toFixed(2)}px)`;
       },
       // asleep once nobody holds it and the rope has stopped swinging
@@ -328,8 +351,6 @@ export default function ThemeCord() {
     });
 
     return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', measure);
       grab.removeEventListener('pointerdown', down);
       grab.removeEventListener('pointermove', move);
       grab.removeEventListener('pointerup', drop);
@@ -340,29 +361,34 @@ export default function ThemeCord() {
     };
   }, []);
 
-  return (
-    <div className="relative" style={{ width: BOX, height: BOX }}>
+  // The cord twice, once in each theme's colours, like the demo's two rooms:
+  // one shows at a time, and while the theme changes both show and the light
+  // one is cut to the same circle as the light page (see globals.css).
+  const copy = (theme: 'light' | 'dark', k: number) => (
+    <div className={`cord-copy cord-${theme}`} aria-hidden="true">
       <svg
-        className="absolute left-0 top-0 overflow-visible pointer-events-none"
+        className="absolute left-0 top-0 overflow-visible"
         width={BOX}
         height={BOX}
-        aria-hidden="true"
       >
         <path
-          ref={pathRef}
-          d={`M${BOX / 2} ${-TOP0}L${BOX / 2} ${REST}`}
+          ref={(el) => {
+            pathRefs.current[k] = el;
+          }}
+          d={`M${BOX / 2} ${REST - L}L${BOX / 2} ${REST}`}
           fill="none"
-          stroke="var(--muted-2)"
+          stroke={theme === 'light' ? '#85847e' : '#828282'}
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
-      {/* the bead, in the demo's lamp colours: a grey screw base and a classic
-          bulb, lit (yellow) in light mode and dim in dark */}
+      {/* the bead, in the demo's lamp colours: a grey screw base and a
+          classic bulb, lit (yellow) in light mode and dim in dark */}
       <i
-        ref={beadRef}
-        aria-hidden="true"
+        ref={(el) => {
+          beadRefs.current[k] = el;
+        }}
         className="absolute top-0 will-change-transform"
         style={{
           left: -BULB / 2,
@@ -380,7 +406,7 @@ export default function ThemeCord() {
           {/* the screw base, tip up: a domed contact and three threads,
               widening toward the neck: threads and gaps all even (34 and
               17, about 2px and 1px) */}
-          <g className="fill-[color:var(--muted-2)]">
+          <g fill={theme === 'light' ? '#85847e' : '#828282'}>
             <path d="M-54 40A54 40 0 0 1 54 40Z" />
             <rect x={-91.5} y={57} width={183} height={34} rx={17} />
             <rect x={-100} y={108} width={200} height={34} rx={17} />
@@ -390,11 +416,22 @@ export default function ThemeCord() {
               through a fillet of 88 into a globe of radius 208.5 */}
           <path
             vectorEffect="non-scaling-stroke"
-            className="fill-[#ffd23f] dark:fill-white/[.14] dark:stroke-white/[.12]"
+            className={
+              theme === 'light'
+                ? 'fill-[#ffd23f]'
+                : 'fill-white/[.14] stroke-white/[.12]'
+            }
             d="M-96.5 210A12 12 0 0 0 -108.5 222V251.5A88 88 0 0 1 -138.18 317.39A208.5 208.5 0 1 0 138.18 317.39A88 88 0 0 1 108.5 251.5V222A12 12 0 0 0 96.5 210Z"
           />
         </svg>
       </i>
+    </div>
+  );
+
+  return (
+    <div className="relative" style={{ width: BOX, height: BOX }}>
+      {copy('dark', 0)}
+      {copy('light', 1)}
       {/* the one real control: it sits on the bead and follows it */}
       <button
         ref={grabRef}

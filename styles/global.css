@@ -44,12 +44,51 @@
   box-shadow: 0 0 0 1px var(--rim) inset;
 }
 
-/* Theme change: the cord reveals the new theme in a growing circle (see
-   ThemeCord), so the browser's default cross-fade is switched off */
+/* Theme change: the light page is a circle around the bulb, growing to
+   turn the light on and shrinking to turn it off (see ThemeCord), so the
+   browser's default cross-fade is switched off. Turning off, the old page
+   is the light one and goes on top. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+:root.cord-off::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* The cord is drawn twice, once per theme, and only the current theme's
+   copy shows. Through a change both show, live and above the page, the
+   light one cut to the light page's circle, so the cord keeps moving
+   instead of freezing in the page's snapshot. */
+.cord-copy {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cord-dark {
+  view-transition-name: cord-dark;
+}
+.cord-light {
+  view-transition-name: cord-light;
+}
+:root.dark:not(.cord-turning) .cord-light,
+:root:not(.dark):not(.cord-turning) .cord-dark {
+  visibility: hidden;
+}
+::view-transition-group(cord-dark),
+::view-transition-group(cord-light),
+::view-transition-new(cord-dark),
+::view-transition-new(cord-light) {
+  animation: none;
+}
+::view-transition-old(cord-dark),
+::view-transition-old(cord-light) {
+  display: none;
+}
+:root.cord-off::view-transition-group(cord-dark),
+:root.cord-off::view-transition-group(cord-light) {
+  z-index: 2;
 }
 
 /* Pull cord: the invisible button that sits on the bead and follows it */
