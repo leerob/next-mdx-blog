@@ -11,7 +11,7 @@ My personal website: research, blog posts, notes, guitar covers and a guestbook.
 ## Structure
 
 - `pages/` – home, about, blog, notes, guestbook and dashboard, plus the RSS feed and sitemap
-- `pages/api/` – live data: GitHub, YouTube, Unsplash, Spotify, Semantic Scholar, post views and the guestbook
+- `pages/api/` – live data: GitHub, YouTube, Unsplash, Last.fm, Semantic Scholar, post views and the guestbook
 - `components/`, `layouts/` – UI and page layouts
 - `lib/` – Sanity queries, API clients and shared helpers
 - `prisma/` – database schema

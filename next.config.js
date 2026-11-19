@@ -7,10 +7,6 @@ module.exports = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'i.scdn.co'
-      },
-      {
-        protocol: 'https',
         hostname: 'pbs.twimg.com'
       },
       {
