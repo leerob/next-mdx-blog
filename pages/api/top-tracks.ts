@@ -1,5 +1,5 @@
 import { type NextRequest } from 'next/server';
-import { getTopTracks } from 'lib/spotify';
+import { getTopTracks } from 'lib/lastfm';
 
 export const config = {
   runtime: 'edge'
@@ -8,19 +8,12 @@ export const config = {
 export default async function handler(req: NextRequest) {
   let tracks = null;
   try {
-    const response = await getTopTracks();
-    if (response.ok) {
-      const { items } = await response.json();
-      if (Array.isArray(items)) {
-        tracks = items.slice(0, 10).map((track) => ({
-          artist: track.artists.map((_artist) => _artist.name).join(', '),
-          songUrl: track.external_urls.spotify,
-          title: track.name
-        }));
-      }
+    const result = await getTopTracks(10);
+    if (result.length) {
+      tracks = result;
     }
   } catch {
-    // token or network error: handled below like any other failure
+    // API or network error: handled below like any other failure
   }
 
   // never cache a failure, so it can't replace the last good list
