@@ -4,15 +4,16 @@ import { useTheme } from 'next-themes';
 import { S, step, atRest, register, after, cancel, kick } from 'lib/spring';
 
 // The slot it hangs in: the same 40px square as the other nav buttons. The
-// cord is the demo's: twelve 9px links, 108px in all, hung from above the
-// top of the page so the bead rests at the slot's top; the long cord is what
-// makes it swing as wide as the demo's.
+// cord comes down from the very top of the page and the bead rests at the
+// slot's top. How far the slot sits below the top is measured, not assumed,
+// so the cord still reaches the top when the nav's height changes (the mobile
+// menu is taller than the slot, for one).
 const BOX = 40,
   // the bead: the classic bulb icon (drawn 682 units tall, see below), hung
   // tip up and exactly as tall as the slot, so it fills it like a button
   BULB = (418 * BOX) / 682, // its width, about 24.5px
-  N = 12, // links in the cord
-  L = 108, // its length (9px a link)
+  TOP0 = 32, // the nav's top padding: the first guess, before measuring
+  N = 8, // links in the cord
   CLICK = 22, // stretch that flips the switch (the original's)
   MAXS = 54, // the most it gives
   TICK = 1 / 240; // the rope's fixed step (see tick)
@@ -45,17 +46,25 @@ export default function ThemeCord() {
     const HX = S(0, 210, 22),
       HY = S(0, 210, 22); // the hand that pulls on a tap
     const K = S(1, 300, 17); // how far the cord is stretched: it eases back, so letting go is a bounce and not a whip
-    // where the cord hangs from: its length above the bead's rest, which is
-    // off the top of the page
-    const ax = BOX / 2,
-      ay = -L,
+    const slot = grab.parentElement!;
+    // where the cord hangs from: the top of the page, measured from the slot;
+    // its length then puts the bead back at the slot's top
+    const ax = BOX / 2;
+    let ay = -TOP0,
+      L = TOP0,
       SEG = L / N;
-    const pts: P[] = Array.from({ length: N + 1 }, (_, i) => ({
-      x: ax,
-      y: ay + i * SEG,
+    const pts: P[] = Array.from({ length: N + 1 }, () => ({
+      x: 0,
+      y: 0,
       vx: 0,
       vy: 0
     }));
+    const hang = () =>
+      pts.forEach((q, i) => {
+        q.x = ax;
+        q.y = ay + i * SEG;
+        q.vx = q.vy = 0;
+      });
     let held: {
       id: number;
       x: number;
@@ -74,6 +83,25 @@ export default function ThemeCord() {
       asleep = false,
       calm = 0, // how long it has been still
       moved = true; // stepped since it was last drawn
+    let measured = false;
+    const measure = () => {
+      const top = slot.getBoundingClientRect().top + window.scrollY;
+      if (measured && Math.abs(top + ay) < 0.5) return;
+      measured = true;
+      ay = -top;
+      L = top;
+      SEG = L / N;
+      hang();
+      asleep = false;
+      moved = true;
+      kick();
+    };
+    measure();
+    // re-measure when the nav changes size (breakpoints, fonts loading)
+    const nav = slot.closest('nav') ?? document.body;
+    const ro = new ResizeObserver(measure);
+    ro.observe(nav);
+    window.addEventListener('resize', measure);
     // its timers, all cancelled when it goes
     const timers = new Set<ReturnType<typeof after>>();
     const later = (sec: number, fn: () => void) => {
@@ -298,6 +326,8 @@ export default function ThemeCord() {
     });
 
     return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
       grab.removeEventListener('pointerdown', down);
       grab.removeEventListener('pointermove', move);
       grab.removeEventListener('pointerup', drop);
@@ -319,7 +349,7 @@ export default function ThemeCord() {
       >
         <path
           ref={pathRef}
-          d={`M${BOX / 2} ${-L}L${BOX / 2} 0`}
+          d={`M${BOX / 2} ${-TOP0}L${BOX / 2} 0`}
           fill="none"
           className="stroke-[#85847e] dark:stroke-[#828282]"
           strokeWidth={2}
