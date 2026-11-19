@@ -61,11 +61,6 @@ export type YouTube = {
   viewCount: number;
 };
 
-export type VideoStats = {
-  views: number;
-  likes: number | null;
-};
-
 export type GitHub = {
   followers: number;
   stars: number;

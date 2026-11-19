@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Container from '../components/Container';
 import BlogPostCard from '../components/BlogPostCard';
 import ResearchPaperCard from '../components/ResearchPaperCard';
-import VideoList from '../components/VideoList';
+import VideoCard from '../components/VideoCard';
 import RollText from '../components/RollText';
 
 export default function Home() {
@@ -150,41 +150,41 @@ export default function Home() {
           features some of my acoustic guitar cover of popular songs.
         </p>
         {/* newest first, by publish date */}
-        <VideoList
-          videos={[
-            {
-              href: 'https://youtu.be/ALa2q5i_G30',
-              length: '05:38',
-              title: '宇多田ヒカル Utada Hikaru - First Love'
-            },
-            {
-              href: 'https://youtu.be/JqTIkdMLcHw',
-              length: '02:39',
-              title: 'Sungha Jung - Seventh #9'
-            },
-            {
-              href: 'https://youtu.be/BS11lif_yuM',
-              length: '03:16',
-              title: '아이유 IU - Through The Night'
-            },
-            {
-              href: 'https://youtu.be/3Tr_-s0pZjs',
-              length: '03:03',
-              title: 'Secret Base ～君がくれたもの～'
-            },
-            {
-              href: 'https://youtu.be/hhS-thBlBbw',
-              length: '03:22',
-              title: 'Aimer - Kataomoi',
-              duet: true
-            },
-            {
-              href: 'https://youtu.be/NlaUZfxdoEQ',
-              length: '04:41',
-              title: 'DEPAPEPE - ONE',
-              duet: true
-            }
-          ]}
+        <VideoCard
+          index={1}
+          href="https://youtu.be/ALa2q5i_G30"
+          length="05:38"
+          title="宇多田ヒカル Utada Hikaru - First Love"
+        />
+        <VideoCard
+          index={2}
+          href="https://youtu.be/JqTIkdMLcHw"
+          length="02:39"
+          title="Sungha Jung - Seventh #9"
+        />
+        <VideoCard
+          index={3}
+          href="https://youtu.be/BS11lif_yuM"
+          length="03:16"
+          title="아이유 IU - Through The Night"
+        />
+        <VideoCard
+          index={4}
+          href="https://youtu.be/3Tr_-s0pZjs"
+          length="03:03"
+          title="Secret Base ～君がくれたもの～"
+        />
+        <VideoCard
+          index={5}
+          href="https://youtu.be/hhS-thBlBbw"
+          length="03:22"
+          title="Aimer - Kataomoi"
+        />
+        <VideoCard
+          index={6}
+          href="https://youtu.be/NlaUZfxdoEQ"
+          length="04:41"
+          title="DEPAPEPE - ONE"
         />
         <a
           target="_blank"
