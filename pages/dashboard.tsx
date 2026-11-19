@@ -12,7 +12,7 @@ export default function Dashboard() {
       title="Dashboard – Ziyi Zhu"
       description="My personal dashboard, tracking metrics across Unsplash, YouTube, GitHub and more."
     >
-      <div className="flex flex-col justify-center items-start max-w-2xl mx-auto mb-16">
+      <div className="flex flex-col justify-center items-start w-full max-w-2xl mx-auto mb-16">
         <h1 className="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white">
           Dashboard
         </h1>
@@ -44,9 +44,7 @@ export default function Dashboard() {
           Curious what I'm currently jamming to? Here are my top tracks from the
           past month, updated daily.
         </p>
-        <div className="flex flex-col gap-2 w-full mt-4">
-          <TopTracks />
-        </div>
+        <TopTracks />
       </div>
     </Container>
   );

@@ -80,7 +80,7 @@ export default function NowPlaying() {
 
   return (
     <div className="flex flex-row-reverse items-center sm:flex-row mb-8 space-x-0 sm:space-x-2 w-full">
-      {data?.songUrl ? (
+      {data?.isPlaying ? (
         <AnimatedBars />
       ) : (
         <svg className="h-4 w-4 ml-auto mt-[-2px]" viewBox="0 0 168 168">
@@ -91,15 +91,10 @@ export default function NowPlaying() {
         </svg>
       )}
       <div className="inline-flex flex-col sm:flex-row w-full max-w-full truncate">
-        {data?.songUrl ? (
-          <a
-            className="capsize text-gray-800 dark:text-gray-200 font-medium  max-w-max truncate"
-            href={data.songUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+        {data?.isPlaying ? (
+          <p className="capsize text-gray-800 dark:text-gray-200 font-medium max-w-max truncate">
             {data.title}
-          </a>
+          </p>
         ) : (
           <p className="capsize text-gray-800 dark:text-gray-200 font-medium">
             Not Playing
