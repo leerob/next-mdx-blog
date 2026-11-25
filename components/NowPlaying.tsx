@@ -90,20 +90,22 @@ export default function NowPlaying() {
           />
         </svg>
       )}
-      <div className="inline-flex flex-col sm:flex-row w-full max-w-full truncate">
+      {/* no capsize trim here: it pulls the box in past the descenders, and the
+          overflow clip that truncation needs would cut them off */}
+      <div className="inline-flex flex-col sm:flex-row w-full max-w-full min-w-0">
         {data?.isPlaying ? (
-          <p className="capsize text-gray-800 dark:text-gray-200 font-medium max-w-max truncate">
+          <p className="text-gray-800 dark:text-gray-200 font-medium max-w-max truncate">
             {data.title}
           </p>
         ) : (
-          <p className="capsize text-gray-800 dark:text-gray-200 font-medium">
+          <p className="text-gray-800 dark:text-gray-200 font-medium">
             Not Playing
           </p>
         )}
-        <span className="capsize mx-2 text-gray-500 dark:text-gray-300 hidden sm:block">
+        <span className="mx-2 text-gray-500 dark:text-gray-300 hidden sm:block">
           {' – '}
         </span>
-        <p className="capsize text-gray-500 dark:text-gray-300 max-w-max truncate">
+        <p className="text-gray-500 dark:text-gray-300 max-w-max truncate">
           {data?.artist ?? 'Spotify'}
         </p>
       </div>

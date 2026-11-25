@@ -592,7 +592,7 @@ table {
 
 /* Dynamic Menu toggle lines */
 /* ZZ monogram, as on portfolio.ziyizhu.com: two bold serif Zs, the second
-   offset by 0.8rem so they overlap; MobileMenu slides the right one out */
+   offset by 0.8rem so they overlap; MobileMenu shows it only while open */
 .zz-letter {
   position: absolute;
   top: 50%;

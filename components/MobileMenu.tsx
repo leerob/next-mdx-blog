@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import useSWR from 'swr';
+
+import fetcher from 'lib/fetcher';
+import type { Counts } from 'pages/api/counts';
 
 import {
   S,
@@ -13,26 +17,26 @@ import {
   kick
 } from 'lib/spring';
 
-const LINKS = [
+const LINKS: { href: string; text: string; count?: keyof Counts }[] = [
   { href: '/', text: 'Home' },
-  { href: '/guestbook', text: 'Guestbook' },
+  { href: '/guestbook', text: 'Guestbook', count: 'guestbook' },
   { href: '/dashboard', text: 'Dashboard' },
-  { href: '/blog', text: 'Blog' },
-  { href: '/notes', text: 'Notes' },
+  { href: '/blog', text: 'Blog', count: 'blog' },
+  { href: '/notes', text: 'Notes', count: 'notes' },
   { href: 'https://portfolio.ziyizhu.com/', text: 'Portfolio' }
 ];
 
-// The original's measurements: closed it is a 150 × 52 pill (radius 26) with
-// the ZZ logo inset 20px on the left and the 24px toggle 14px from the right;
-// the header stays 52px tall when open.
-const PILL_W = 150,
-  HEAD = 52,
+// Closed it is a round 44px button holding only the 24px toggle (10px in from
+// each side); open, the header is 52px tall with the ZZ logo inset 20px on the
+// left and the toggle 14px from the right.
+const BTN = 44,
   HEAD_OPEN = 52,
-  PAD_R = 14,
+  PAD_R = 10,
+  PAD_R_OPEN = 14,
   ROW = 48;
 
-// Dynamic Menu (designbookmark.com/motion#db-dynamic-menu): a pill with the
-// name and a two line toggle. Open, it springs into a panel: width and height have
+// Dynamic Menu (designbookmark.com/motion#db-dynamic-menu): a round button
+// with a two line toggle. Open, it springs into a panel: width and height have
 // their own springs, the height a little softer so the panel lands after it
 // has widened. The lines meet in the middle and turn into a cross, and the
 // links rise in one by one, dropping away in reverse when it closes.
@@ -41,10 +45,13 @@ export default function MobileMenu() {
   const path = router.asPath.split(/[?#]/)[0]; // without ?query or #hash
   const active = LINKS.find((l) => l.href === path);
   const [open, setOpen] = useState(false);
+  const { data: counts } = useSWR<Counts>('/api/counts', fetcher, {
+    revalidateOnFocus: false
+  });
   const menuRef = useRef<HTMLDivElement>(null);
   const b1Ref = useRef<HTMLElement>(null);
   const b2Ref = useRef<HTMLElement>(null);
-  const z2Ref = useRef<HTMLSpanElement>(null);
+  const logoRef = useRef<HTMLSpanElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const liRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -54,12 +61,12 @@ export default function MobileMenu() {
     const menu = menuRef.current!,
       b1 = b1Ref.current!,
       b2 = b2Ref.current!,
-      z2 = z2Ref.current!,
+      logo = logoRef.current!,
       btn = btnRef.current!,
       list = listRef.current!;
     const lis = liRefs.current.map((el) => ({ el: el!, s: S(0, 260, 22) }));
-    const W = S(PILL_W, 320, 26),
-      H = S(HEAD, 240, 22),
+    const W = S(BTN, 320, 26),
+      H = S(BTN, 240, 22),
       X = S(0, 380, 24);
     let timers = [];
 
@@ -67,8 +74,8 @@ export default function MobileMenu() {
       // open wide, but stop short of the theme toggle on the right
       // (page gutters 2 × 32px, toggle 40px, gap 8px)
       const big = Math.min(300, window.innerWidth - 64 - 48);
-      W.t = o ? big : PILL_W;
-      H.t = o ? HEAD_OPEN + 4 + lis.length * ROW + 10 : HEAD;
+      W.t = o ? big : BTN;
+      H.t = o ? HEAD_OPEN + 4 + lis.length * ROW + 10 : BTN;
       X.t = o ? 1 : 0;
       timers.forEach(cancel);
       timers = lis.map((l, i) =>
@@ -87,15 +94,17 @@ export default function MobileMenu() {
       render() {
         menu.style.width = W.x.toFixed(2) + 'px';
         menu.style.height = H.x.toFixed(2) + 'px';
-        // a full pill (radius 26) when closed, a rounded panel (22) when open
+        // a circle (radius 22) when closed, a rounded panel (22) when open
         const o = clamp(X.x, 0, 1);
-        menu.style.borderRadius = (HEAD / 2 - 4 * o).toFixed(2) + 'px';
-        // the left Z stays put and the right one slides out by 0.7rem, the
-        // same total gap the portfolio's hover opens between them
-        z2.style.transform = `translate(${(11.2 * o).toFixed(2)}px, -50%)`;
-        // the header keeps its height, so the name and toggle stay put
-        const head = HEAD + (HEAD_OPEN - HEAD) * o;
+        menu.style.borderRadius = BTN / 2 + 'px';
+        // the logo only shows in the open panel, fading in as it widens
+        logo.style.opacity = o.toFixed(3);
+        // the header grows from the button's height, the toggle easing out
+        // from the button's centre to the panel's corner
+        const head = BTN + (HEAD_OPEN - BTN) * o;
         btn.style.height = head.toFixed(2) + 'px';
+        btn.style.paddingRight =
+          (PAD_R + (PAD_R_OPEN - PAD_R) * o).toFixed(2) + 'px';
         list.style.top = head.toFixed(2) + 'px';
         const x = clamp(X.x, -0.1, 1.1);
         // two lines 8px apart meet in the middle and turn 45 degrees each way
@@ -150,11 +159,11 @@ export default function MobileMenu() {
   useEffect(() => setOpen(false), [router.asPath]);
 
   return (
-    <div className="relative md:hidden" style={{ width: PILL_W, height: HEAD }}>
+    <div className="relative md:hidden" style={{ width: BTN, height: BTN }}>
       <div
         ref={menuRef}
         className="surface absolute left-0 top-0 z-50 overflow-hidden shadow-[0_24px_48px_-24px_rgba(0,0,0,0.35)]"
-        style={{ width: PILL_W, height: HEAD, borderRadius: HEAD / 2 }}
+        style={{ width: BTN, height: BTN, borderRadius: BTN / 2 }}
       >
         <button
           type="button"
@@ -163,21 +172,20 @@ export default function MobileMenu() {
           aria-label="Toggle menu"
           onClick={() => setOpen((o) => !o)}
           ref={btnRef}
-          // the logo is inset 20px on the left and the toggle 14px on the
-          // right; the toggle rides out to the right as the panel opens
           className="group absolute inset-x-0 top-0 flex items-center justify-end text-ink focus:outline-none"
-          style={{ height: HEAD, paddingRight: PAD_R }}
+          style={{ height: BTN, paddingRight: PAD_R }}
         >
-          {/* ZZ monogram from portfolio.ziyizhu.com: the two Zs overlap into
-              one mark when closed; the right Z slides out as the menu opens */}
+          {/* ZZ monogram from portfolio.ziyizhu.com, the two Zs overlapping
+              as it rests there; it is only shown while the menu is open */}
           <span
+            ref={logoRef}
             aria-hidden="true"
-            className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-6"
+            className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-6 opacity-0"
           >
             <span className="zz-letter" style={{ left: 0 }}>
               Z
             </span>
-            <span ref={z2Ref} className="zz-letter" style={{ left: '0.8rem' }}>
+            <span className="zz-letter" style={{ left: '0.8rem' }}>
               Z
             </span>
           </span>
@@ -198,7 +206,7 @@ export default function MobileMenu() {
           ref={listRef}
           id="mobile-menu-links"
           className="absolute inset-x-0 px-2.5 pb-2.5 pt-1"
-          style={{ top: HEAD }}
+          style={{ top: BTN }}
         >
           {LINKS.map((l, i) => (
             <li
@@ -212,12 +220,13 @@ export default function MobileMenu() {
                 href={l.href}
                 onClick={() => setOpen(false)}
                 tabIndex={open ? 0 : -1}
-                className="flex items-center justify-between h-12 px-2.5 rounded-[14px] text-[22px] font-bold tracking-tight text-ink hover:bg-fill-1"
+                aria-current={l === active ? 'page' : undefined}
+                className="flex items-center justify-between h-12 px-2.5 rounded-[14px] text-[22px] font-semibold tracking-[-0.02em] text-ink hover:bg-fill-1"
               >
                 {l.text}
-                {l === active && (
-                  <span className="text-xs font-medium tracking-normal px-2 py-0.5 rounded-full bg-fill-2 text-muted">
-                    Here
+                {l.count && counts && (
+                  <span className="text-xs font-medium tracking-normal tabular-nums px-2 py-[3px] rounded-full bg-fill-2 text-muted">
+                    {counts[l.count]}
                   </span>
                 )}
               </Link>
